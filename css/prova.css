@@ -1,0 +1,118 @@
+/* Kauê — folhas da prova (tela e impressão) */
+@page { size: A4; margin: 10mm 11mm 13mm; }
+@page { @bottom-left { font-family: Arial, sans-serif; font-size: 7.5pt; color: #666; }
+        @bottom-right { font-family: Arial, sans-serif; font-size: 7.5pt; color: #666; } }
+
+.folhas { --fonte-prova: 'Atkinson Hyperlegible Next', Arial, sans-serif; --tam: 10pt; }
+.folha { font-family: var(--fonte-prova); font-size: var(--tam); line-height: 1.3; color: #111; background: #fff;
+  break-after: page; }
+.folha:last-child { break-after: auto; }
+.folha p { margin: 0 0 0.35em; }
+.folha p:last-child { margin-bottom: 0; }
+
+/* cabeçalho */
+.cab { margin-bottom: 2.5mm; }
+.cab-img { position: relative; }
+.cab-img img { display: block; width: 100%; height: auto; }
+.titulo-sobre { position: absolute; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 2%; }
+.titulo-sobre span { font-weight: 700; font-size: 15pt; line-height: 1.1; color: #10243a; }
+.cab-topo { display: flex; align-items: center; gap: 4mm; margin-bottom: 2mm; }
+.logo-escola { max-height: 18mm; max-width: 40mm; object-fit: contain; }
+.nome-escola { font-weight: 700; font-size: 10pt; text-transform: uppercase; letter-spacing: 0.3pt; }
+.titulo { font-size: 14pt; font-weight: 700; margin: 1mm 0 0; line-height: 1.2; }
+.titulo-versao { font-weight: 400; }
+.cab-imagem .titulo, .cab-branco .titulo { text-align: center; margin: 2mm 0; }
+.campos { margin-top: 2mm; display: flex; flex-direction: column; gap: 1.5mm; }
+.campos .linha { display: flex; gap: 1.5mm; }
+.campo { border: 0.8pt solid #333; border-radius: 2.2mm; padding: 1.4mm 2.2mm; font-size: 9pt; white-space: nowrap; overflow: hidden; flex: 0 1 auto; min-width: 24mm; }
+.campo.larga { flex: 1 1 auto; }
+.campo span { font-weight: 700; text-transform: uppercase; font-size: 8pt; }
+
+.faixa { font-size: 8.5pt; border-top: 0.8pt solid #333; border-bottom: 0.8pt solid #333; padding: 1mm 0; margin-bottom: 3mm; display: flex; flex-wrap: wrap; gap: 0 1.5mm; }
+.faixa .codigo { font-family: 'Atkinson Hyperlegible Mono', monospace; letter-spacing: 0.5pt; }
+.faixa .sep { color: #888; }
+.instrucoes { border: 0.8pt solid #999; border-radius: 2mm; padding: 2mm 3mm; margin-bottom: 3mm; font-size: 9.5pt; }
+
+/* conteúdo em colunas */
+.conteudo { column-gap: 7mm; column-rule: 0.5pt solid #bbb; column-fill: balance; }
+.bloco { margin: 0 0 3mm; }
+.bloco h2 { font-size: 10.5pt; font-weight: 700; text-transform: uppercase; margin: 0 0 1.5mm; break-after: avoid; }
+.texto-base { text-align: justify; hyphens: auto; margin-bottom: 2mm; }
+.separador { height: 1mm; }
+.questao { margin: 0 0 3.2mm; break-inside: auto; }
+/* a questão pode passar de uma coluna para a outra, mas cada parte fica inteira */
+.questao .enunciado { break-inside: avoid; break-after: avoid; orphans: 3; widows: 3; }
+.alts, .vf, .associe, .linhas { break-inside: avoid; }
+.questao.tipo-discursiva, .questao.tipo-complete { break-inside: avoid; }
+.questao .enunciado { text-align: justify; hyphens: auto; }
+.questao .enunciado p:first-of-type { display: inline; }
+.questao .num { font-weight: 700; margin-right: 1mm; }
+.questao .valor { font-size: 8.5pt; color: #333; margin-right: 1mm; }
+.alts, .vf, .colA, .colB { list-style: none; margin: 1.5mm 0 0; padding: 0; }
+.alts li, .vf li, .colA li, .colB li { display: flex; gap: 1.2mm; margin: 0.35mm 0; align-items: baseline; }
+.marca { white-space: pre; flex: none; }
+.letra { flex: none; font-weight: 700; }
+.txt p { display: inline; margin: 0; }
+.associe { display: grid; grid-template-columns: 1fr 1.6fr; gap: 3mm; }
+.lacuna { display: inline-block; width: var(--larg, 10ch); border-bottom: 0.8pt solid #111; height: 1em; vertical-align: baseline; margin: 0 0.5mm; }
+.linhas { height: calc(var(--n) * 7.5mm); margin-top: 1mm;
+  background: repeating-linear-gradient(to bottom, transparent 0, transparent calc(7.5mm - 0.6pt), #555 calc(7.5mm - 0.6pt), #555 7.5mm); }
+.fig { margin: 1.5mm 0; break-inside: avoid; text-align: center; }
+.fig img { max-width: 100%; max-height: 48mm; object-fit: contain; }
+.fig figcaption { font-size: 8pt; color: #333; margin-top: 0.8mm; }
+.fig.falta .sem-imagem { border: 1pt dashed #888; color: #555; font-size: 8.5pt; padding: 6mm 3mm; border-radius: 2mm; }
+.tex { font-family: 'Atkinson Hyperlegible Mono', monospace; }
+
+/* grade de respostas do aluno */
+.grade { break-inside: avoid; border: 1pt solid #222; border-radius: 2.5mm; padding: 2mm 3mm; margin: 2mm 0 4mm; }
+.grade-titulo { font-weight: 700; font-size: 12pt; display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5mm; }
+.grade-titulo span { font-weight: 400; font-size: 8.5pt; font-family: 'Atkinson Hyperlegible Mono', monospace; }
+.grade table { border-collapse: collapse; margin: 0 auto; }
+.grade th { font-size: 9pt; padding: 0.6mm 2mm 0.6mm 0; text-align: right; }
+.grade td { padding: 0.6mm 1mm; }
+.bola { display: inline-flex; width: 5mm; height: 5mm; border: 0.8pt solid #222; border-radius: 50%; align-items: center; justify-content: center; font-size: 7pt; font-weight: 700; }
+.grade-dica { font-size: 7.5pt; color: #444; text-align: center; margin-top: 1mm; }
+.mensagem-final { text-align: center; margin-top: 3mm; break-inside: avoid; font-weight: 700; }
+.mensagem-final .fig img { max-height: 30mm; }
+
+/* versão adaptada: letra e espaços maiores, uma coluna */
+.adaptada { --tam: 14pt; line-height: 1.55; }
+.adaptada .questao { margin-bottom: 7mm; break-inside: auto; }
+.adaptada .alts, .adaptada .vf, .adaptada .associe, .adaptada .fig, .adaptada .enunciado { break-inside: avoid; }
+.adaptada .enunciado { break-after: avoid; }
+.adaptada .fig img { max-height: 62mm; }
+.adaptada .alts li, .adaptada .vf li, .adaptada .colA li, .adaptada .colB li { margin: 2mm 0; }
+.adaptada .linhas { height: calc(var(--n) * 10mm); background: repeating-linear-gradient(to bottom, transparent 0, transparent calc(10mm - 0.6pt), #555 calc(10mm - 0.6pt), #555 10mm); }
+.adaptada .bola { width: 7mm; height: 7mm; font-size: 9pt; }
+.adaptada .lacuna { height: 1.2em; }
+
+/* gabarito do professor */
+.gabarito { font-family: Arial, sans-serif; font-size: 9.5pt; }
+.gab-cab h1 { font-size: 15pt; margin: 1mm 0; }
+.aviso-prof { display: inline-block; background: #111; color: #fff; font-weight: 700; font-size: 8.5pt; padding: 1mm 2.5mm; border-radius: 1mm; }
+.gab-versao { break-inside: avoid; margin-top: 5mm; }
+.gab-versao h2 { font-size: 12pt; border-bottom: 1pt solid #111; padding-bottom: 1mm; margin: 0 0 2mm; display: flex; justify-content: space-between; }
+.gab-versao h2 span { font-weight: 400; font-size: 9.5pt; font-family: 'Atkinson Hyperlegible Mono', monospace; }
+.gab-resumo { font-family: 'Atkinson Hyperlegible Mono', monospace; font-size: 10pt; font-weight: 700; margin: 0 0 2mm; }
+.nota-adaptada { font-size: 8.5pt; color: #333; margin: 0 0 2mm; }
+table.gab { width: 100%; border-collapse: collapse; }
+table.gab th, table.gab td { border: 0.6pt solid #999; padding: 1mm 1.5mm; text-align: left; vertical-align: top; }
+table.gab th { background: #eee; }
+table.gab td.n, table.gab td.v { width: 10mm; text-align: center; }
+table.gab td.resp { font-weight: 700; }
+.disc { margin-top: 2mm; font-size: 9pt; }
+.disc ul { margin: 1mm 0 0 5mm; padding: 0; }
+
+/* na tela: folhas A4 com sombra */
+@media screen {
+  .folhas { background: #e8e3d6; padding: 16px 0 40px; }
+  .folha { width: 210mm; min-height: 297mm; margin: 0 auto 16px; padding: 10mm 11mm 13mm; box-shadow: 0 2px 10px rgba(0,0,0,.18); box-sizing: border-box; }
+}
+@media print {
+  .folhas { background: none; padding: 0; }
+  .nao-imprimir { display: none !important; }
+}
+
+/* títulos da prova usam a fonte da prova, não a da marca */
+.folha h1, .folha h2 { font-family: inherit; letter-spacing: normal; word-spacing: normal; }
+.gabarito h1 { font-family: Arial, sans-serif; }
