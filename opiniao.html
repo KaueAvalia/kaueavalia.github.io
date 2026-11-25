@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sua opinião sobre o Kauê</title>
+<meta name="description" content="Conte o que ajudou, o que travou e o que faltou no Kauê. Comentários, sugestões, críticas e elogios, sem precisar se identificar.">
+<meta name="theme-color" content="#2B6C4E">
+<meta property="og:title" content="Sua opinião sobre o Kauê">
+<meta property="og:description" content="Conte o que ajudou, o que travou e o que faltou no Kauê. Comentários, sugestões, críticas e elogios, sem precisar se identificar.">
+<meta property="og:image" content="img/compartilhar.png">
+<link rel="icon" type="image/png" href="img/favicon-32.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="stylesheet" href="css/kaue.css">
+<link rel="stylesheet" href="css/portal.css">
+<script>
+  // quem instalou a primeira versão do Kauê (que abria direto no app) continua indo para o app
+  if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches && !location.pathname.includes('/app/')) location.replace('app/');
+</script>
+</head>
+<body class="portal">
+<header class="portal-topo"><div class="barra">
+  <a href="index.html" class="marca" aria-label="Kauê, página inicial"><img src="img/logo-mata.png" alt="Kauê" height="38"></a>
+  <nav aria-label="Portal"><a href="index.html" class="">Início</a><a href="tutorial.html" class="">Tutorial</a><a href="sobre.html" class="">Sobre</a><a href="marca.html" class="">A marca</a><a href="opiniao.html" class="ativo">Opinião</a><a href="app/" class="app">Abrir o app</a></nav>
+</div></header>
+<main>
+<section class="cabeca-pagina"><h1>Sua opinião</h1><p>Está testando o Kauê? Conte o que ajudou, o que travou e o que faltou. Comentário, sugestão, crítica ou elogio: tudo ajuda, e você não precisa se identificar.</p></section>
+
+<section class="opiniao-pagina">
+  <div class="cartao" id="caixa-opiniao"><p class="ajuda">Carregando o formulário…</p></div>
+  <p class="ajuda">Prefere e-mail? Escreva para <a href="mailto:kaueavalia@gmail.com">kaueavalia@gmail.com</a>. Veja também os <a href="termos.html">termos de uso e privacidade</a>.</p>
+</section>
+<script type="module">
+  import { montarOpiniao, enviarPendentes } from './js/opiniao.js';
+  montarOpiniao(document.getElementById('caixa-opiniao'), { origem: 'site', versao: '1.5.1', termos: 'termos.html#opiniao' });
+  enviarPendentes();
+</script>
+
+</main>
+<footer class="portal-rodape"><div class="barra">
+  <img src="img/logo-gustavo.png" alt="Gustavo Valentino | Educação e Comunicação">
+  <div class="contatos"><span class="slogan">Da prova à nota, num voo só.</span><small>Um projeto de Gustavo Valentino · Kauê 1.5.1, gratuito, em fase de testes</small>
+    <a href="mailto:kaueavalia@gmail.com"><b>Kauê</b> kaueavalia@gmail.com</a> · <a href="https://www.instagram.com/kaueavalia/"><b>Instagram</b> @kaueavalia</a><br>
+    <a href="https://vejaogustavo.github.io"><b>Site</b> vejaogustavo.github.io</a> · <a href="https://www.instagram.com/vejaogustavo/"><b>Instagram</b> @vejaogustavo</a> · <a href="https://www.youtube.com/@vejaogustavo"><b>YouTube</b> @vejaogustavo</a>
+    <small>As provas e notas ficam no seu aparelho. <a href="termos.html">Termos de uso e privacidade</a> · <a href="opiniao.html">Dar opinião</a></small></div>
+</div></footer>
+<script>
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname)))
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

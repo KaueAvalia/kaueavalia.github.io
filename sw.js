@@ -1,5 +1,5 @@
 // Kauê — funciona sem internet: guarda os arquivos do app no aparelho
-const VERSAO = 'kaue-v1.4.0';
+const VERSAO = 'kaue-v1.5.1';
 const ARQUIVOS = [
   './',
   'app/',
@@ -53,6 +53,8 @@ const ARQUIVOS = [
   'js/formato-kaue.js',
   'js/juntar.js',
   'js/notas.js',
+  'js/opiniao-config.js',
+  'js/opiniao.js',
   'js/provas-dados.js',
   'js/render-prova.js',
   'js/telas-turmas.js',
@@ -63,7 +65,9 @@ const ARQUIVOS = [
   'js/xlsx.js',
   'js/zip.js',
   'marca.html',
+  'opiniao.html',
   'sobre.html',
+  'termos.html',
   'tutorial.html',
   'vendor/docx/docx.min.js',
   'vendor/katex/fonts/KaTeX_AMS-Regular.woff2',
