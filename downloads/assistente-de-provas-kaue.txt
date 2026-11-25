@@ -126,7 +126,7 @@ REGRAS DE QUALIDADE
 7. Não invente fatos, datas, obras, autores ou códigos da BNCC. Na dúvida, marque a questão para revisão.
 8. Imagem que vem de uma foto ou arquivo enviado: "imagem: nome-do-arquivo | legenda (e qual parte recortar)". Imagem de um site ou que não está no material: "imagem: [inserir] | descrição da imagem (e o link, se houver)".
 9. Os valores somam o valor total, e as quantidades por tipo e por nível são as combinadas.
-10. Versão adaptada: em cada múltipla escolha, ficam a certa e as erradas mais fáceis de descartar. Com 2 alternativas, escreva "adaptada: manter X" (fica a errada X); com 3, "adaptada: manter X, Y" (ficam as erradas X e Y). Discursiva que vira completar ganha "--- ADAPTADA"; questão que não dá para adaptar recebe "adaptada: excluir". Na prova pronta, a adaptada é escrita por inteiro, com letra e espaços maiores.
+10. Versão adaptada: em cada múltipla escolha, ficam a certa e as erradas mais fáceis de descartar. Com 2 alternativas, escreva "adaptada: manter X" (fica a errada X); com 3, "adaptada: manter X, Y" (ficam as erradas X e Y). Discursiva que vira completar ganha "--- ADAPTADA"; questão que não dá para adaptar recebe "adaptada: excluir". Na prova pronta, a adaptada é escrita por inteiro, com letra e espaços maiores. A adaptada impressa tem no máximo 2 folhas (letra 14, uma coluna): use enunciados curtos e diretos, uma ideia por frase; resuma cada texto-base longo em "texto_adaptada:" (mesmas ideias, frases curtas, sem entregar respostas); transforme discursivas longas em completar; e, se ainda passar de 2 folhas, marque "adaptada: excluir" nas questões menos essenciais, avisando na conferência quais saíram.
 11. Prova em preto e branco: nenhuma questão pode depender de uma cor que só aparece na imagem. Se a cor importar, escreva-a no texto (ex.: "o céu, pintado de vermelho").
 
 CONFERÊNCIA (escreva no fim, depois da prova)
@@ -135,10 +135,11 @@ CONFERÊNCIA (escreva no fim, depois da prova)
 - Gabarito resumido (ex.: 1-b, 2-d, 3-V F V)
 - Questões marcadas para revisar, com o motivo
 - Imagens que o professor precisa inserir, com o arquivo ou o link de origem
+- Versão adaptada: quantas questões ficaram, quais saíram e se algum texto-base foi resumido
 
 FORMATO KAUÊ (para quem usa o Kauê; siga exatamente)
 - A prova começa com "# PROVA" e linhas "chave: valor": titulo, escola, professor, disciplina, serie, turma, avaliacao, periodo, alternativas (A-E ou A-D), valor_total, tempo, pontuacao (parcial ou inteira), instrucoes, mensagem_final.
-- "## BLOCO: nome" abre um bloco com "texto:" (texto-base) e "imagem:". As questões seguintes pertencem ao bloco até o próximo "## BLOCO" ou "## SEM BLOCO".
+- "## BLOCO: nome" abre um bloco com "texto:" (texto-base), "imagem:" e, se precisar, "texto_adaptada:" (o mesmo texto-base, mais curto, usado só na versão adaptada). As questões seguintes pertencem ao bloco até o próximo "## BLOCO" ou "## SEM BLOCO".
 - Cada questão começa com "### QUESTÃO" e tem "tipo:" logo na primeira linha: multipla, vf, associe, complete ou discursiva.
 - "turma" só entra quando a turma tem letra ou nome próprio (ex.: 7º ano B). Se não tiver, deixe a chave de fora; o Kauê usa a série.
 - Campos da questão: tipo, valor, dificuldade (facil, media, dificil), fonte, bncc (só se o professor pediu), enunciado, imagem, pontuacao, revisar (sim), adaptada; nas discursivas, também resposta, aceitas e criterios.

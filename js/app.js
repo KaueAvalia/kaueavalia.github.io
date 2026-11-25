@@ -2,7 +2,8 @@
 import { lerFormatoKaue } from './formato-kaue.js';
 import { provaPedeAdaptada, LETRAS_VERSAO } from './versoes.js';
 import { configPadrao, assinatura, carregarProva, montarTudo, mapaDeArquivos, professorPadrao } from './provas-dados.js';
-import { provaHTML, gabaritoHTML, cssPaginas, chaveImagem, FONTES_PROVA, textoHTML } from './render-prova.js';
+import { provaHTML, partesDaProva, gabaritoHTML, cssPaginas, chaveImagem, FONTES_PROVA, textoHTML } from './render-prova.js';
+import { diagramar, textoDoEncaixe, avisoDoEncaixe } from './diagramar.js';
 import * as db from './db.js';
 import { backupCompleto, backupDaProva, lerBackup, restaurar, resumoEmLinhas } from './backup.js';
 import { telaTurmas, telaTurmaForm, telaTurma, telaAlunos, telaAvaliacao, telaCorrigirLista, telaCorrigir, telaImprimirTurma } from './telas-turmas.js';
@@ -10,7 +11,7 @@ import { TUTORIAL } from './tutorial.js';
 import { aparelho, carimbo, nomearAparelho, descreverCarimbo, dataHora, sufixoArquivo, SUGESTOES_DE_NOME } from './aparelho.js';
 import { $, $$, esc, uid, num, dataCurta, NOMES_TIPO, baixar, nomeArquivo, medirImagem, prepararImagem, aviso } from './util.js';
 
-const VERSAO_APP = '1.2.0';
+const VERSAO_APP = '1.4.0';
 const tela = () => document.getElementById('tela');
 let urlsAbertas = [];
 const liberarUrls = () => { urlsAbertas.forEach(u => URL.revokeObjectURL(u)); urlsAbertas = []; };
@@ -371,24 +372,30 @@ async function telaImprimir(id, qual) {
   const urls = new Map([...arquivos].map(([k, a]) => [k, urlDe(a.blob)]));
   const opcoes = prova.config;
   const info = { professor: await professorPadrao(escola) };
-  let escolhidas = montadas, html;
+  let escolhidas = montadas, html = '';
   if (qual === 'gabarito') html = gabaritoHTML({ prova: res.prova, montadas });
-  else {
-    if (qual !== 'todas') escolhidas = montadas.filter(m => (qual === 'adaptada' ? m.adaptada : m.letra === qual && !m.adaptada));
-    html = escolhidas.map(m => provaHTML({ prova: res.prova, montada: m, escola, urls, opcoes, info })).join('');
-  }
+  else if (qual !== 'todas') escolhidas = montadas.filter(m => (qual === 'adaptada' ? m.adaptada : m.letra === qual && !m.adaptada));
   const rotulo = qual === 'gabarito' ? 'Gabarito' : qual === 'todas' ? 'Todas as versões' : qual === 'adaptada' ? 'Versão adaptada' : `Versão ${qual}`;
-  document.getElementById('css-paginas').textContent = cssPaginas(montadas, res.prova, { numerar: qual !== 'todas', gerado: await textoGerado() });
+  document.getElementById('css-paginas').textContent = cssPaginas(montadas, res.prova, { gerado: await textoGerado() });
   document.body.classList.add('modo-impressao');
   const fonte = (FONTES_PROVA[opcoes.fonte] || FONTES_PROVA.atkinson).css;
   tela().innerHTML = `
     <div class="barra-impressao nao-imprimir">
       <a class="botao" href="#/prova/${id}">‹ Voltar</a>
       <div class="barra-titulo"><b>${esc(res.prova.titulo || 'Prova')}</b> · ${rotulo}</div>
-      <button class="botao principal" id="imprimir">Imprimir ou salvar PDF</button>
+      <button class="botao principal" id="imprimir" ${qual === 'gabarito' ? '' : 'disabled'}>Imprimir ou salvar PDF</button>
     </div>
-    <p class="dica-impressao nao-imprimir">Na janela de impressão, escolha <b>Salvar como PDF</b> para ter o arquivo, ou a sua impressora. Deixe <b>Cabeçalhos e rodapés</b> desmarcado e as margens no padrão.</p>
-    <div class="folhas" style="--fonte-prova:${fonte};--tam:${opcoes.tamanho || 10}pt">${html}</div>`;
+    <p class="dica-impressao nao-imprimir" id="encaixe">${qual === 'gabarito' ? 'Na janela de impressão, escolha <b>Salvar como PDF</b> ou a sua impressora.' : 'Encaixando as questões nas folhas…'}</p>
+    <div class="folhas" id="folhas" style="--fonte-prova:${fonte};--tam:${opcoes.tamanho || 10}pt">${html}</div>`;
+  if (qual !== 'gabarito') {
+    const versoes = escolhidas.map(m => partesDaProva({ prova: res.prova, montada: m, escola, urls, opcoes, info }));
+    const resumo = await diagramar($('#folhas'), versoes, { tamanho: opcoes.tamanho || 10 });
+    if (!$('#encaixe')) return;   // saiu da tela enquanto encaixava
+    const aviso = avisoDoEncaixe(resumo);
+    $('#encaixe').innerHTML = `<b>${esc(textoDoEncaixe(resumo))}.</b> As folhas já vêm no tamanho certo: na janela de impressão, deixe a escala em <b>100%</b> (ou Padrão) e escolha <b>Salvar como PDF</b> ou a sua impressora.`
+      + (aviso ? `<span class="aviso-encaixe">${esc(aviso)}</span>` : '');
+    $('#imprimir').disabled = false;
+  }
   document.title = `${res.prova.titulo || 'Prova'} – ${rotulo}`;
   $('#imprimir').addEventListener('click', async () => {
     if (qual !== 'gabarito') await registrarImpressao(prova, montadas);

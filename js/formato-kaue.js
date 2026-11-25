@@ -6,7 +6,7 @@ const VERSAO = 1;
 
 const CHAVES_PROVA = new Set(['titulo', 'disciplina', 'serie', 'periodo', 'alternativas', 'valor_total',
   'pontuacao', 'instrucoes', 'mensagem_final', 'imagem_final', 'escola', 'tempo', 'professor', 'turma', 'avaliacao']);
-const CHAVES_BLOCO = new Set(['texto', 'imagem']);
+const CHAVES_BLOCO = new Set(['texto', 'imagem', 'texto_adaptada']);
 const CHAVES_QUESTAO = new Set(['tipo', 'valor', 'dificuldade', 'fonte', 'bncc', 'enunciado', 'imagem',
   'adaptada', 'pontuacao', 'linhas', 'resposta', 'criterios', 'aceitas', 'revisar', 'fixar']);
 const CAMPOS_TEXTO = new Set(['texto', 'enunciado', 'resposta', 'instrucoes', 'mensagem_final']);
@@ -169,6 +169,7 @@ export function lerFormatoKaue(textoEntrada) {
           ultimo = CAMPOS_TEXTO.has(chave) ? { obj: res.prova, prop: chave, paragrafo: true } : null;
         } else if (secao === 'bloco') {
           if (chave === 'imagem') { blocoAtual.imagens.push(lerImagem(valor)); ultimo = null; }
+          else if (chave === 'texto_adaptada') { blocoAtual.textoAdaptada = valor; ultimo = { obj: blocoAtual, prop: 'textoAdaptada', paragrafo: true }; }
           else { blocoAtual.texto = valor; ultimo = { obj: blocoAtual, prop: 'texto', paragrafo: true }; }
         } else {
           ultimo = aplicarCampoQuestao(alvoQ, chave, valor, n, erro, aviso);
@@ -324,7 +325,7 @@ export function gabaritoDe(q) {
 function finalizarProva(res, erro, aviso) {
   const p = res.prova;
   for (const c of ['texto', 'instrucoes', 'mensagem_final']) if (p[c]) p[c] = limpaTexto(p[c]);
-  res.blocos.forEach(b => { b.texto = limpaTexto(b.texto); });
+  res.blocos.forEach(b => { b.texto = limpaTexto(b.texto); if (b.textoAdaptada) b.textoAdaptada = limpaTexto(b.textoAdaptada); });
   if (Object.keys(p).length)
     for (const c of ['titulo', 'disciplina', 'serie', 'alternativas', 'valor_total'])
       if (!p[c]) aviso(1, `Dados da prova: falta "${c}".`);

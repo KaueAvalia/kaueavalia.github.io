@@ -104,7 +104,7 @@ function questaoHTML(q, urls, opcoes) {
     corpo = `<div class="associe"><ol class="colA">${q.colunaA.map(a => `<li><span class="letra">${a.letra})</span> <span class="txt">${textoHTML(a.texto)}</span></li>`).join('')}</ol>
       <ol class="colB">${q.colunaB.map(b => `<li><span class="marca">(&nbsp;&nbsp;)</span> <span class="txt">${textoHTML(b.texto)}</span></li>`).join('')}</ol></div>`;
   } else if (q.tipo === 'discursiva') {
-    corpo = `<div class="linhas" style="--n:${Math.max(1, Math.min(20, q.linhas || 4))}"></div>`;
+    corpo = `<div class="linhas">${'<div class="linha"></div>'.repeat(Math.max(1, Math.min(20, q.linhas || 4)))}</div>`;
   }
   const enun = textoHTML(q.enunciado, { lacunas: q.tipo === 'complete' });
   return `<article class="questao tipo-${q.tipo}"><div class="enunciado"><span class="num">${q.n}.</span>${valor}${enun}</div>${figs}${corpo}</article>`;
@@ -124,7 +124,24 @@ function gradeHTML(montada) {
     <table>${linhas}</table><div class="grade-dica">Pinte só uma letra por questão.</div></section>`;
 }
 
-// ---------- uma versão completa ----------
+// ---------- uma versão em partes: o topo e os blocos que o diagramador encaixa nas páginas ----------
+export function partesDaProva({ prova, montada, escola, urls, opcoes, info }) {
+  const colunas = montada.adaptada ? 1 : (opcoes.colunas || 2);
+  const instr = prova.instrucoes ? `<div class="instrucoes">${textoHTML(prova.instrucoes)}</div>` : '';
+  const topo = cabecalhoHTML(escola, prova, montada, urls, info) + faixaHTML(prova, montada, { ...info, total: montada.total }) + instr;
+  const pecas = [];
+  for (const it of montada.itens) {
+    if (it.tipo === 'bloco') pecas.push({ tipo: 'bloco', html: blocoHTML(it.bloco, urls) });
+    else if (it.tipo !== 'semBloco') pecas.push({ tipo: 'questao', html: questaoHTML(it.q, urls, opcoes) });
+  }
+  if (opcoes.grade !== false) { const g = gradeHTML(montada); if (g) pecas.push({ tipo: 'grade', html: g }); }
+  const finalImg = prova.imagem_final ? figura({ arquivo: prova.imagem_final.split('|')[0].trim(), legenda: '' }, urls, 'final') : '';
+  if (prova.mensagem_final || finalImg) pecas.push({ tipo: 'fim', html: `<div class="mensagem-final">${textoHTML(prova.mensagem_final)}${finalImg}</div>` });
+  const nome = montada.adaptada ? 'Adaptada' : `Versão ${montada.letra}`;
+  return { colunas, adaptada: montada.adaptada, topo, pecas, rodape: `${esc(prova.titulo || 'Prova')} · ${nome}`, codigo: montada.codigo };
+}
+
+// ---------- uma versão corrida (prévia do cabeçalho na tela da escola) ----------
 export function provaHTML({ prova, montada, escola, urls, opcoes, info }) {
   const colunas = montada.adaptada ? 1 : (opcoes.colunas || 2);
   const corpo = montada.itens.map(it => it.tipo === 'bloco' ? blocoHTML(it.bloco, urls)
@@ -142,13 +159,9 @@ export function provaHTML({ prova, montada, escola, urls, opcoes, info }) {
   </section>`;
 }
 
-// CSS das páginas: rodapé com código e número da página (cada versão tem a sua página nomeada)
-export function cssPaginas(montadas, prova, { numerar = true, gerado = '' } = {}) {
-  // o contador de páginas é do documento inteiro: só numera quando sai uma versão por vez
-  const t = String(prova.titulo || 'Prova').replace(/["\\]/g, '');
-  const pag = numerar ? ` · página " counter(page) " de " counter(pages)` : '"';
-  return montadas.map(m => `@page v${m.versao} { @bottom-left { content: "${t} · ${m.adaptada ? 'Adaptada' : 'Versão ' + m.letra}"; } @bottom-right { content: "Código ${m.codigo}${pag}; } }`).join('\n')
-    + `\n@page gab { ${gerado ? `@bottom-left { content: "${String(gerado).replace(/["\\]/g, '')}"; } ` : ''}@bottom-right { content: "Gabarito do professor · página " counter(page) " de " counter(pages); } }`;
+// CSS das páginas do gabarito (as folhas das versões já trazem o próprio rodapé)
+export function cssPaginas(montadas, prova, { gerado = '' } = {}) {
+  return `@page gab { ${gerado ? `@bottom-left { content: "${String(gerado).replace(/["\\]/g, '')}"; } ` : ''}@bottom-right { content: "Gabarito do professor · página " counter(page) " de " counter(pages); } }`;
 }
 
 // ---------- gabarito do professor ----------

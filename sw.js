@@ -1,5 +1,5 @@
 // Kauê — funciona sem internet: guarda os arquivos do app no aparelho
-const VERSAO = 'kaue-v1.2.0';
+const VERSAO = 'kaue-v1.4.0';
 const ARQUIVOS = [
   './',
   'app/',
@@ -20,6 +20,7 @@ const ARQUIVOS = [
   'img/assistente-capa.webp',
   'img/compartilhar.png',
   'img/favicon-32.png',
+  'img/gustavo.webp',
   'img/icone-192.png',
   'img/icone-512.png',
   'img/logo-claro.png',
@@ -41,12 +42,14 @@ const ARQUIVOS = [
   'img/tutorial/planilha.webp',
   'img/tutorial/prova.webp',
   'img/tutorial/restaurar.webp',
+  'img/video-capa.jpg',
   'index.html',
   'js/aparelho.js',
   'js/app.js',
   'js/backup.js',
   'js/correcao.js',
   'js/db.js',
+  'js/diagramar.js',
   'js/formato-kaue.js',
   'js/juntar.js',
   'js/notas.js',
@@ -60,6 +63,7 @@ const ARQUIVOS = [
   'js/xlsx.js',
   'js/zip.js',
   'marca.html',
+  'sobre.html',
   'tutorial.html',
   'vendor/docx/docx.min.js',
   'vendor/katex/fonts/KaTeX_AMS-Regular.woff2',
@@ -99,6 +103,8 @@ self.addEventListener('activate', e => {
 // primeiro o que está guardado; se não houver, busca na internet e guarda
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
+  // vídeo vem em pedaços (Range) direto da rede; não fica guardado para usar sem internet
+  if (new URL(e.request.url).pathname.endsWith('.mp4') || e.request.headers.has('range')) return;
   e.respondWith(caches.match(e.request, { ignoreSearch: true }).then(r => r || fetch(e.request).then(resp => {
     if (resp.ok) { const copia = resp.clone(); caches.open(VERSAO).then(c => c.put(e.request, copia)); }
     return resp;

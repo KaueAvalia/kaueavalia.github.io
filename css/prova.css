@@ -1,12 +1,30 @@
 /* Kauê — folhas da prova (tela e impressão) */
-@page { size: A4; margin: 10mm 11mm 13mm; }
-@page { @bottom-left { font-family: Arial, sans-serif; font-size: 7.5pt; color: #666; }
-        @bottom-right { font-family: Arial, sans-serif; font-size: 7.5pt; color: #666; } }
+/* As folhas das versões já vêm do tamanho exato do A4, com margens e rodapé próprios.
+   Margem zero no @page: o navegador não tem onde pôr o cabeçalho e o rodapé dele (data, endereço). */
+@page { size: A4; margin: 0; }
+@page gab { margin: 12mm 12mm 14mm;
+  @bottom-left { font-family: Arial, sans-serif; font-size: 7.5pt; color: #666; }
+  @bottom-right { font-family: Arial, sans-serif; font-size: 7.5pt; color: #666; } }
 
-.folhas { --fonte-prova: 'Atkinson Hyperlegible Next', Arial, sans-serif; --tam: 10pt; }
-.folha { font-family: var(--fonte-prova); font-size: var(--tam); line-height: 1.3; color: #111; background: #fff;
-  break-after: page; }
-.folha:last-child { break-after: auto; }
+.folhas { --fonte-prova: 'Atkinson Hyperlegible Next', Arial, sans-serif; --tam: 10pt;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.folha { font-family: var(--fonte-prova); font-size: var(--tam); line-height: 1.3; color: #111; background: #fff; }
+
+/* uma folha A4 */
+.pagina { position: relative; width: 210mm; height: 297mm; padding: 10mm 11mm 15mm; box-sizing: border-box; overflow: hidden;
+  display: flex; flex-direction: column; break-after: page; page-break-after: always; }
+.pagina:last-child { break-after: auto; page-break-after: auto; }
+/* o miolo é diagramado numa folha "virtual" (medidas / f) e reduzido por zoom: letra, linhas, imagens e cabeçalho juntos */
+.pag-miolo { zoom: var(--f, 1); width: calc(188mm / var(--f, 1)); height: calc(272mm / var(--f, 1)); display: flex; flex-direction: column; }
+.pag-topo { display: flow-root; flex: none; }
+.pag-colunas { flex: 1 1 auto; display: grid; column-gap: calc(7mm / var(--f, 1)); align-items: stretch; min-height: 0; }
+.pag-col { position: relative; min-width: 0; }
+.pag-col + .pag-col::before { content: ''; position: absolute; left: calc(-3.5mm / var(--f, 1)); top: 0; bottom: 0; border-left: 0.5pt solid #bbb; }
+.peca { display: flow-root; }
+.pag-rodape { position: absolute; left: 11mm; right: 11mm; bottom: 7mm; display: flex; justify-content: space-between; gap: 4mm;
+  font: 7.5pt Arial, sans-serif; color: #666; }
+.medidor { position: absolute; left: -20000px; top: 0; visibility: hidden; pointer-events: none; }
+.medidor .med-col { display: flow-root; }
 .folha p { margin: 0 0 0.35em; }
 .folha p:last-child { margin-bottom: 0; }
 
@@ -45,6 +63,7 @@
 .alts, .vf, .associe, .linhas { break-inside: avoid; }
 .questao.tipo-discursiva, .questao.tipo-complete { break-inside: avoid; }
 .questao .enunciado { text-align: justify; hyphens: auto; }
+.adaptada .texto-base, .adaptada .questao .enunciado { text-align: left; hyphens: manual; }
 .questao .enunciado p:first-of-type { display: inline; }
 .questao .num { font-weight: 700; margin-right: 1mm; }
 .questao .valor { font-size: 8.5pt; color: #333; margin-right: 1mm; }
@@ -55,8 +74,8 @@
 .txt p { display: inline; margin: 0; }
 .associe { display: grid; grid-template-columns: 1fr 1.6fr; gap: 3mm; }
 .lacuna { display: inline-block; width: var(--larg, 10ch); border-bottom: 0.8pt solid #111; height: 1em; vertical-align: baseline; margin: 0 0.5mm; }
-.linhas { height: calc(var(--n) * 7.5mm); margin-top: 1mm;
-  background: repeating-linear-gradient(to bottom, transparent 0, transparent calc(7.5mm - 0.6pt), #555 calc(7.5mm - 0.6pt), #555 7.5mm); }
+.linhas { margin-top: 1mm; }
+.linha { height: 7.5mm; border-bottom: 0.6pt solid #555; box-sizing: border-box; }
 .fig { margin: 1.5mm 0; break-inside: avoid; text-align: center; }
 .fig img { max-width: 100%; max-height: 48mm; object-fit: contain; }
 .fig figcaption { font-size: 8pt; color: #333; margin-top: 0.8mm; }
@@ -82,12 +101,12 @@
 .adaptada .enunciado { break-after: avoid; }
 .adaptada .fig img { max-height: 62mm; }
 .adaptada .alts li, .adaptada .vf li, .adaptada .colA li, .adaptada .colB li { margin: 2mm 0; }
-.adaptada .linhas { height: calc(var(--n) * 10mm); background: repeating-linear-gradient(to bottom, transparent 0, transparent calc(10mm - 0.6pt), #555 calc(10mm - 0.6pt), #555 10mm); }
+.adaptada .linha { height: 10mm; }
 .adaptada .bola { width: 7mm; height: 7mm; font-size: 9pt; }
 .adaptada .lacuna { height: 1.2em; }
 
 /* gabarito do professor */
-.gabarito { font-family: Arial, sans-serif; font-size: 9.5pt; }
+.gabarito { font-family: Arial, sans-serif; font-size: 9.5pt; page: gab; }
 .gab-cab h1 { font-size: 15pt; margin: 1mm 0; }
 .aviso-prof { display: inline-block; background: #111; color: #fff; font-weight: 700; font-size: 8.5pt; padding: 1mm 2.5mm; border-radius: 1mm; }
 .gab-versao { break-inside: avoid; margin-top: 5mm; }
@@ -105,8 +124,9 @@ table.gab td.resp { font-weight: 700; }
 
 /* na tela: folhas A4 com sombra */
 @media screen {
-  .folhas { background: #e8e3d6; padding: 16px 0 40px; }
-  .folha { width: 210mm; min-height: 297mm; margin: 0 auto 16px; padding: 10mm 11mm 13mm; box-shadow: 0 2px 10px rgba(0,0,0,.18); box-sizing: border-box; }
+  .folhas { background: #e8e3d6; padding: 16px 0 40px; position: relative; }
+  .pagina { margin: 0 auto 16px; box-shadow: 0 2px 10px rgba(0,0,0,.18); }
+  .gabarito { width: 210mm; min-height: 297mm; margin: 0 auto 16px; padding: 12mm 12mm 14mm; box-shadow: 0 2px 10px rgba(0,0,0,.18); box-sizing: border-box; }
 }
 @media print {
   .folhas { background: none; padding: 0; }

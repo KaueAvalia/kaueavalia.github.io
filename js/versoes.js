@@ -139,12 +139,14 @@ function questaoMontada(q, perm, n, origem) {
 }
 
 // itens na ordem de impressão: cabeçalhos de bloco + questões
-function itensComBlocos(res, montadas) {
+function itensComBlocos(res, montadas, adaptada = false) {
   const itens = [];
   let anterior;
   montadas.forEach(({ q, bloco }) => {
     if (bloco !== anterior) {
-      if (bloco != null) itens.push({ tipo: 'bloco', bloco: res.blocos.find(b => b.id === bloco) });
+      const b = bloco != null ? res.blocos.find(x => x.id === bloco) : null;
+      // na adaptada, o bloco usa o texto-base resumido, quando houver
+      if (b) itens.push({ tipo: 'bloco', bloco: adaptada && b.textoAdaptada ? { ...b, texto: b.textoAdaptada } : b });
       else if (anterior != null) itens.push({ tipo: 'semBloco' });
       anterior = bloco;
     }
@@ -197,7 +199,7 @@ export function montarAdaptada(res, { numero, alternativas = 2, semente }) {
   const total = Math.round(questoes.reduce((s, q) => s + (q.valor || 0), 0) * 100) / 100;
   return {
     versao: VERSAO_ADAPTADA, letra: 'Adaptada', codigo: codigoDe(numero, VERSAO_ADAPTADA), adaptada: true,
-    itens: itensComBlocos(res, montadas), questoes, gabarito: resumoGabarito(questoes), total,
+    itens: itensComBlocos(res, montadas, true), questoes, gabarito: resumoGabarito(questoes), total,
     excluidas: res.questoes.length - questoes.length,
   };
 }
