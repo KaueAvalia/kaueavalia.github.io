@@ -8,7 +8,7 @@ const CHAVES_PROVA = new Set(['titulo', 'disciplina', 'serie', 'periodo', 'alter
   'pontuacao', 'instrucoes', 'mensagem_final', 'imagem_final', 'escola', 'tempo', 'professor', 'turma', 'avaliacao']);
 const CHAVES_BLOCO = new Set(['texto', 'imagem']);
 const CHAVES_QUESTAO = new Set(['tipo', 'valor', 'dificuldade', 'fonte', 'bncc', 'enunciado', 'imagem',
-  'adaptada', 'pontuacao', 'linhas', 'resposta', 'criterios', 'revisar', 'fixar']);
+  'adaptada', 'pontuacao', 'linhas', 'resposta', 'criterios', 'aceitas', 'revisar', 'fixar']);
 const CAMPOS_TEXTO = new Set(['texto', 'enunciado', 'resposta', 'instrucoes', 'mensagem_final']);
 
 const TIPOS = {
@@ -47,7 +47,7 @@ function novaQuestao(linha, bloco) {
   return {
     linha, bloco, tipo: null, valor: null, dificuldade: null, fonte: null, bncc: null,
     enunciado: '', imagens: [], alternativas: [], itensVF: [], colunaA: [], colunaB: [],
-    lacunas: [], resposta: '', criterios: [], linhas: null, pontuacao: null,
+    lacunas: [], resposta: '', criterios: [], aceitas: [], linhas: null, pontuacao: null,
     revisar: false, fixar: null, adaptadaRegra: null, adaptadaQuestao: null,
   };
 }
@@ -130,6 +130,10 @@ export function lerFormatoKaue(textoEntrada) {
         ultimo = { obj: alvoQ.itensVF[alvoQ.itensVF.length - 1], prop: 'texto' };
         continue;
       }
+      if (ultimo && ultimo.prop === 'aceitas' && (m = l.match(/^[-•]\s*(.+)$/))) {
+        alvoQ.aceitas.push({ texto: m[1].trim() });
+        continue;
+      }
       if (ultimo && ultimo.prop === 'criterios' && (m = l.match(RE.criterio))) {
         alvoQ.criterios.push({ valor: numero(m[1]), texto: m[2].trim() });
         continue;
@@ -177,7 +181,7 @@ export function lerFormatoKaue(textoEntrada) {
     if (ultimo && Array.isArray(ultimo.obj[ultimo.prop])) {
       const lista = ultimo.obj[ultimo.prop];
       if (lista.length) { lista[lista.length - 1].texto += ' ' + l; continue; }
-      aviso(n, `Critério fora do formato "- valor: texto": "${l.slice(0, 60)}"`);
+      aviso(n, ultimo.prop === 'aceitas' ? `Variação fora do formato "- texto": "${l.slice(0, 60)}"` : `Critério fora do formato "- valor: texto": "${l.slice(0, 60)}"`);
       continue;
     }
     if (ultimo) {
@@ -218,6 +222,10 @@ function aplicarCampoQuestao(q, chave, valor, n, erro, aviso) {
     case 'criterios':
       if (valor) aviso(n, 'Escreva cada critério numa linha própria, começando com "- valor: texto".');
       return { obj: q, prop: 'criterios' };
+    case 'aceitas':
+      // variações de resposta que também valem: numa linha separadas por " / " ou uma por linha, com "- "
+      if (valor) valor.split(/\s+\/\s+/).filter(Boolean).forEach(t => q.aceitas.push({ texto: t.trim() }));
+      return { obj: q, prop: 'aceitas' };
     default:
       q[chave] = valor;
       return CAMPOS_TEXTO.has(chave) ? { obj: q, prop: chave, paragrafo: true } : null;
@@ -274,6 +282,7 @@ function validarQuestao(q, rotulo, nAlt, erro, aviso, ehAdaptada) {
       if (Math.abs(max - q.valor) > 0.001) aviso(q.linha, `${rotulo}: o critério mais alto (${max}) é diferente do valor da questão (${q.valor}).`);
     }
   }
+  if (q.aceitas.length && q.tipo !== 'discursiva') aviso(q.linha, `${rotulo}: "aceitas" só vale para discursiva; em completar, separe as respostas com barra: [[resposta/outra]].`);
   if (['vf', 'associe', 'complete'].includes(q.tipo) && q.pontuacao && !['parcial', 'inteira'].includes(q.pontuacao))
     aviso(q.linha, `${rotulo}: pontuação deve ser "parcial" ou "inteira".`);
 }

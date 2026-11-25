@@ -113,7 +113,7 @@ export function gerarVersoes(res, { numero, quantas = 4, embaralharQuestoes = fa
 function questaoMontada(q, perm, n, origem) {
   const out = {
     n, origem, tipo: q.tipo, valor: q.valor, enunciado: q.enunciado, imagens: q.imagens,
-    linhas: q.linhas, resposta: q.resposta, criterios: q.criterios, pontuacao: q.pontuacao,
+    linhas: q.linhas, resposta: q.resposta, aceitas: q.aceitas || [], criterios: q.criterios, pontuacao: q.pontuacao,
     lacunas: q.lacunas, colunaA: q.colunaA, revisar: q.revisar, dificuldade: q.dificuldade, fonte: q.fonte,
   };
   if (q.tipo === 'multipla') {
@@ -155,7 +155,7 @@ function itensComBlocos(res, montadas) {
 
 function resumoGabarito(questoes) {
   return questoes.map(q => ({ n: q.n, tipo: q.tipo, resposta: q.gabarito, valor: q.valor, origem: q.origem,
-    pontuacao: q.pontuacao, criterios: q.criterios, respostaEsperada: q.resposta }));
+    pontuacao: q.pontuacao, criterios: q.criterios, respostaEsperada: q.resposta, aceitas: q.aceitas || [] }));
 }
 
 export function montarVersao(res, desc) {

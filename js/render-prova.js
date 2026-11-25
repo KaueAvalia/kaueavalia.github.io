@@ -143,12 +143,12 @@ export function provaHTML({ prova, montada, escola, urls, opcoes, info }) {
 }
 
 // CSS das páginas: rodapé com código e número da página (cada versão tem a sua página nomeada)
-export function cssPaginas(montadas, prova, { numerar = true } = {}) {
+export function cssPaginas(montadas, prova, { numerar = true, gerado = '' } = {}) {
   // o contador de páginas é do documento inteiro: só numera quando sai uma versão por vez
   const t = String(prova.titulo || 'Prova').replace(/["\\]/g, '');
   const pag = numerar ? ` · página " counter(page) " de " counter(pages)` : '"';
   return montadas.map(m => `@page v${m.versao} { @bottom-left { content: "${t} · ${m.adaptada ? 'Adaptada' : 'Versão ' + m.letra}"; } @bottom-right { content: "Código ${m.codigo}${pag}; } }`).join('\n')
-    + `\n@page gab { @bottom-right { content: "Gabarito do professor · página " counter(page) " de " counter(pages); } }`;
+    + `\n@page gab { ${gerado ? `@bottom-left { content: "${String(gerado).replace(/["\\]/g, '')}"; } ` : ''}@bottom-right { content: "Gabarito do professor · página " counter(page) " de " counter(pages); } }`;
 }
 
 // ---------- gabarito do professor ----------
@@ -157,6 +157,7 @@ export function gabaritoHTML({ prova, montadas }) {
     const linhas = m.gabarito.map(g => `<tr><td class="n">${g.n}</td><td>${NOMES_TIPO[g.tipo] || g.tipo}</td>
       <td class="resp">${g.tipo === 'discursiva' ? '—' : esc(g.resposta)}</td><td class="v">${num(g.valor)}</td></tr>`).join('');
     const disc = m.gabarito.filter(g => g.tipo === 'discursiva').map(g => `<div class="disc"><b>Questão ${g.n}.</b> ${esc(g.respostaEsperada || 'Sem resposta esperada.')}
+      ${g.aceitas && g.aceitas.length ? `<p class="aceitas-gab"><b>Também vale:</b> ${g.aceitas.map(a => esc(a.texto)).join(' · ')}</p>` : ''}
       ${g.criterios && g.criterios.length ? `<ul>${g.criterios.map(c => `<li><b>${num(c.valor)}:</b> ${esc(c.texto)}</li>`).join('')}</ul>` : ''}</div>`).join('');
     const resumo = m.questoes.filter(q => q.tipo === 'multipla').map(q => `${q.n}-${q.gabarito}`).join('  ');
     const nota = m.adaptada && Math.abs(m.total - (prova.valor_total || m.total)) > 0.001

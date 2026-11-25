@@ -7,7 +7,7 @@ export function carregarDocx() {
   if (window.docx) return Promise.resolve(window.docx);
   if (!carregando) carregando = new Promise((ok, falha) => {
     const s = document.createElement('script');
-    s.src = 'vendor/docx/docx.min.js';
+    s.src = new URL('../vendor/docx/docx.min.js', import.meta.url).href;
     s.onload = () => ok(window.docx);
     s.onerror = () => falha(new Error('Não consegui carregar o gerador de Word.'));
     document.head.appendChild(s);
@@ -210,9 +210,9 @@ export async function provaDocx({ prova, montada, escola, arquivos, opcoes, info
   return Packer.toBlob(doc);
 }
 
-export async function gabaritoDocx({ prova, montadas }) {
+export async function gabaritoDocx({ prova, montadas, gerado = '' }) {
   const d = await carregarDocx();
-  const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, PageBreak } = d;
+  const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, PageBreak, Footer } = d;
   const run = (t, extra = {}) => new TextRun({ text: t, font: 'Arial', size: 19, ...extra });
   const borda = { style: BorderStyle.SINGLE, size: 4, color: '999999' };
   const larg = [800, 2500, 5306, 1600]; // soma = largura útil (11906 − 2 × 850)
@@ -240,11 +240,13 @@ export async function gabaritoDocx({ prova, montadas }) {
           cel(g.tipo === 'discursiva' ? '—' : g.resposta, larg[2], { bold: true }), cel(num(g.valor), larg[3])] }))] }));
     m.gabarito.filter(g => g.tipo === 'discursiva').forEach(g => {
       filhos.push(new Paragraph({ spacing: { before: 120 }, children: [run(`Questão ${g.n}. `, { bold: true }), run(g.respostaEsperada || 'Sem resposta esperada.')] }));
+      if ((g.aceitas || []).length) filhos.push(new Paragraph({ indent: { left: 360 }, children: [run('Também vale: ', { bold: true }), run(g.aceitas.map(a => a.texto).join(' · '))] }));
       (g.criterios || []).forEach(c => filhos.push(new Paragraph({ indent: { left: 360 }, children: [run(`${num(c.valor)}: `, { bold: true }), run(c.texto)] })));
     });
   });
   const doc = new Document({ creator: 'Kauê', title: `Gabarito – ${prova.titulo || 'Prova'}`,
     sections: [{ properties: { page: { size: { width: PAGINA.largura, height: PAGINA.altura },
-      margin: { top: 850, bottom: 850, left: 850, right: 850 } } }, children: filhos }] });
+      margin: { top: 850, bottom: 850, left: 850, right: 850 } } },
+      footers: gerado ? { default: new Footer({ children: [new Paragraph({ children: [run(gerado, { size: 16, color: '555555' })] })] }) } : undefined, children: filhos }] });
   return Packer.toBlob(doc);
 }

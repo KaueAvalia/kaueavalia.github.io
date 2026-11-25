@@ -1,45 +1,20 @@
 // Kauê — app: telas, navegação e ligação entre as partes
 import { lerFormatoKaue } from './formato-kaue.js';
-import { gerarVersoes, montarVersao, montarAdaptada, provaPedeAdaptada, LETRAS_VERSAO } from './versoes.js';
+import { provaPedeAdaptada, LETRAS_VERSAO } from './versoes.js';
+import { configPadrao, assinatura, carregarProva, montarTudo, mapaDeArquivos, professorPadrao } from './provas-dados.js';
 import { provaHTML, gabaritoHTML, cssPaginas, chaveImagem, FONTES_PROVA, textoHTML } from './render-prova.js';
 import * as db from './db.js';
-import { backupCompleto, backupDaProva, lerBackup, restaurar } from './backup.js';
+import { backupCompleto, backupDaProva, lerBackup, restaurar, resumoEmLinhas } from './backup.js';
+import { telaTurmas, telaTurmaForm, telaTurma, telaAlunos, telaAvaliacao, telaCorrigirLista, telaCorrigir, telaImprimirTurma } from './telas-turmas.js';
+import { TUTORIAL } from './tutorial.js';
+import { aparelho, carimbo, nomearAparelho, descreverCarimbo, dataHora, sufixoArquivo, SUGESTOES_DE_NOME } from './aparelho.js';
 import { $, $$, esc, uid, num, dataCurta, NOMES_TIPO, baixar, nomeArquivo, medirImagem, prepararImagem, aviso } from './util.js';
 
-const VERSAO_APP = '1.0.0';
+const VERSAO_APP = '1.2.0';
 const tela = () => document.getElementById('tela');
 let urlsAbertas = [];
 const liberarUrls = () => { urlsAbertas.forEach(u => URL.revokeObjectURL(u)); urlsAbertas = []; };
 const urlDe = blob => { const u = URL.createObjectURL(blob); urlsAbertas.push(u); return u; };
-
-// ---------- configuração padrão de uma prova ----------
-const configPadrao = res => ({
-  versoes: 4, embaralharAlternativas: true, embaralharQuestoes: false,
-  adaptada: res ? provaPedeAdaptada(res) : false, adaptadaAlternativas: (res && res.adaptadaAlternativas) || 2,
-  colunas: 2, fonte: 'atkinson', tamanho: 10, mostrarValor: true, grade: true,
-});
-
-const hashTexto = s => { let h = 0; for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
-const assinatura = p => hashTexto(p.texto + JSON.stringify(p.config));
-
-// ---------- dados prontos de uma prova ----------
-async function carregarProva(id) {
-  const prova = await db.pegar('provas', id);
-  if (!prova) return null;
-  const res = lerFormatoKaue(prova.texto);
-  prova.config = { ...configPadrao(res), ...(prova.config || {}) };
-  const escola = prova.escolaId ? await db.pegar('escolas', prova.escolaId) : null;
-  return { prova, res, escola };
-}
-
-function montarTudo(prova, res) {
-  const c = prova.config;
-  const descs = gerarVersoes(res, { numero: prova.numero, quantas: c.versoes, embaralharQuestoes: c.embaralharQuestoes,
-    embaralharAlternativas: c.embaralharAlternativas, semente: prova.id });
-  const montadas = descs.map(d => montarVersao(res, d));
-  if (c.adaptada) montadas.push(montarAdaptada(res, { numero: prova.numero, alternativas: c.adaptadaAlternativas, semente: prova.id }));
-  return montadas;
-}
 
 // todas as imagens que a prova cita, na ordem em que aparecem
 function imagensCitadas(res) {
@@ -59,17 +34,6 @@ function imagensCitadas(res) {
   return lista;
 }
 
-async function mapaDeArquivos(prova, escola) {
-  const mapa = new Map();
-  for (const a of await db.arquivosDe(prova.id)) if (a.blob) mapa.set(a.chave, a);
-  if (escola) for (const a of await db.arquivosDe(escola.id)) if (a.blob) mapa.set(a.chave, a);
-  return mapa;
-}
-
-async function professorPadrao(escola) {
-  return (escola && escola.professor) || await db.config('professor', '');
-}
-
 // ---------- navegação ----------
 const rotas = [
   [/^#?\/?$/, telaInicio],
@@ -80,6 +44,16 @@ const rotas = [
   [/^#\/escolas$/, telaEscolas],
   [/^#\/escola\/([^/]+)$/, m => telaEscola(m[1])],
   [/^#\/backup$/, telaBackup],
+  [/^#\/instrucoes$/, telaInstrucoes],
+  [/^#\/turmas$/, telaTurmas],
+  [/^#\/turma\/nova$/, () => telaTurmaForm(null)],
+  [/^#\/turma\/([^/?]+)\/editar$/, m => telaTurmaForm(m[1])],
+  [/^#\/turma\/([^/?]+)\/alunos$/, m => telaAlunos(m[1])],
+  [/^#\/turma\/([^/?]+)\/imprimir$/, m => telaImprimirTurma(m[1])],
+  [/^#\/turma\/([^/?]+)\/avaliacao\/([^/?]+)(\?.*)?$/, m => telaAvaliacao(m[1], m[2])],
+  [/^#\/turma\/([^/?]+)\/corrigir\/([^/?]+)\/([^/?]+)$/, m => telaCorrigir(m[1], m[2], m[3])],
+  [/^#\/turma\/([^/?]+)\/corrigir\/([^/?]+)$/, m => telaCorrigirLista(m[1], m[2])],
+  [/^#\/turma\/([^/?]+)(\?.*)?$/, m => telaTurma(m[1])],
 ];
 
 async function navegar() {
@@ -93,7 +67,8 @@ async function navegar() {
     const m = h.match(re);
     if (m) {
       try { await fn(m); } catch (e) { console.error(e); tela().innerHTML = `<div class="cartao erro-geral"><h2>Algo deu errado</h2><p>${esc(e.message)}</p><a class="botao" href="#/">Voltar ao início</a></div>`; }
-      const secao = h.startsWith('#/escola') ? '#/escolas' : h.startsWith('#/backup') ? '#/backup' : '#/';
+      const secao = h.startsWith('#/escola') ? '#/escolas' : h.startsWith('#/backup') ? '#/backup' : h.startsWith('#/turma') ? '#/turmas'
+        : h.startsWith('#/instrucoes') ? '#/instrucoes' : '#/';
       $$('.topo nav a').forEach(a => a.classList.toggle('ativo', a.getAttribute('href') === secao));
       window.scrollTo(0, 0);
       return;
@@ -107,20 +82,45 @@ async function telaInicio() {
   const provas = (await db.todos('provas')).sort((a, b) => (b.atualizadaEm || '').localeCompare(a.atualizadaEm || ''));
   const escolas = await db.todos('escolas');
   const ultimoBackup = await db.config('ultimoBackup');
+  const eu = await aparelho();
   const lista = provas.map(p => `<a class="cartao prova-item" href="#/prova/${p.id}">
       <div class="prova-num">Nº ${String(p.numero).padStart(3, '0')}</div>
       <div><h3>${esc(p.titulo || 'Prova sem título')}</h3>
       <p class="meta">${[p.disciplina, p.turma || p.serie].filter(Boolean).map(esc).join(' · ')}${p.questoes ? ` · ${p.questoes} questões` : ''}</p>
-      <p class="meta pequeno">Atualizada em ${dataCurta(p.atualizadaEm)}${p.impressaEm ? ' · impressa' : ''}</p></div></a>`).join('');
+      <p class="meta pequeno">Alterada em ${esc(descreverCarimbo(p.alterada || p.atualizadaEm))}${p.impressaEm ? ' · impressa' : ''}</p></div></a>`).join('');
   const lembrete = provas.length && (!ultimoBackup || Date.now() - new Date(ultimoBackup) > 7 * 864e5)
     ? `<div class="cartao lembrete"><b>Faça um backup.</b> As provas ficam só neste aparelho. <a href="#/backup">Baixar o backup</a></div>` : '';
   tela().innerHTML = `
     <section class="cabeca"><h1>Suas provas</h1><a class="botao principal grande" href="#/nova">+ Colar uma prova</a></section>
+    ${!eu.nome ? cartaoNomeAparelho() : ''}
     ${!escolas.length ? `<div class="cartao dica"><b>Primeiro passo:</b> cadastre sua escola para a prova sair com o cabeçalho certo. <a href="#/escola/nova">Cadastrar escola</a></div>` : ''}
     ${lembrete}
-    ${provas.length ? `<div class="lista">${lista}</div>` : `<div class="cartao vazio"><img src="img/apple-touch-icon.png" alt="" width="64" height="64">
+    ${provas.length ? `<div class="lista">${lista}</div>` : `<div class="cartao vazio"><img src="../img/apple-touch-icon.png" alt="" width="64" height="64">
       <h2>Nenhuma prova ainda</h2><p>Monte a prova com o Assistente de Provas Kauê no Claude, no ChatGPT ou no Gemini, copie o bloco de código da resposta e cole aqui.</p>
       <a class="botao principal" href="#/nova">Colar a primeira prova</a></div>`}`;
+  ligarNomeAparelho(() => navegar());
+}
+
+// ---------- nome deste aparelho ----------
+function cartaoNomeAparelho(atual = '') {
+  return `<div class="cartao nome-aparelho"><h2>${atual ? 'Este aparelho' : 'Dê um nome a este aparelho'}</h2>
+    <p>Cada prova, nota e backup vai mostrar em qual aparelho e a que horas foi feito. Assim, quando você usar o computador e o celular, sabe de onde veio cada coisa.</p>
+    <div class="linha-codigo"><input id="nomeAparelho" class="campo-form" maxlength="40" value="${esc(atual)}" placeholder="Ex.: PC do Gustavo, Telefone 1, PC da escola" aria-label="Nome deste aparelho">
+      <button class="botao principal" id="salvarAparelho">Salvar</button></div>
+    <p class="sugestoes">${SUGESTOES_DE_NOME.map(n => `<button class="botao pequeno sutil" data-sugestao="${esc(n)}">${esc(n)}</button>`).join('')}</p>
+    <p class="ajuda">O nome fica só neste aparelho. Use um nome diferente em cada um.</p></div>`;
+}
+function ligarNomeAparelho(depois) {
+  const campo = $('#nomeAparelho'); if (!campo) return;
+  $$('[data-sugestao]').forEach(b => b.addEventListener('click', () => { campo.value = b.dataset.sugestao; campo.focus(); }));
+  const salvar = async () => {
+    if (!campo.value.trim()) { aviso('Escreva um nome para este aparelho.', 'erro'); campo.focus(); return; }
+    const a = await nomearAparelho(campo.value);
+    aviso(`Este aparelho agora se chama "${a.nome}".`);
+    depois && depois();
+  };
+  $('#salvarAparelho').addEventListener('click', salvar);
+  campo.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); salvar(); } });
 }
 
 // ---------- colar / editar o texto da prova ----------
@@ -210,16 +210,16 @@ async function proximoNumero() {
 }
 
 async function salvarProva(texto, res, existente) {
-  const agora = new Date().toISOString();
+  const cb = await carimbo(); const agora = cb.em;
   const p = res.prova;
-  const prova = existente ? { ...existente } : { id: uid(), numero: await proximoNumero(), criadaEm: agora, config: configPadrao(res) };
+  const prova = existente ? { ...existente } : { id: uid(), numero: await proximoNumero(), criadaEm: agora, criada: cb, config: configPadrao(res) };
   if (!existente) {
     const escolas = await db.todos('escolas');
     const nome = (p.escola || '').toLowerCase();
     const achou = escolas.find(e => nome && e.nome.toLowerCase() === nome) || (escolas.length === 1 ? escolas[0] : null);
     prova.escolaId = achou ? achou.id : null;
   }
-  Object.assign(prova, { texto, atualizadaEm: agora, titulo: p.titulo || '', disciplina: p.disciplina || '', serie: p.serie || '',
+  Object.assign(prova, { texto, atualizadaEm: agora, alterada: cb, titulo: p.titulo || '', disciplina: p.disciplina || '', serie: p.serie || '',
     turma: p.turma || '', questoes: res.questoes.length });
   await db.guardar('provas', prova);
   await db.pedirArmazenamentoPersistente();
@@ -258,7 +258,8 @@ async function telaProva(id) {
 
   tela().innerHTML = `
     <section class="cabeca"><div><p class="sobre">Prova nº ${String(prova.numero).padStart(3, '0')}</p><h1>${esc(prova.titulo || 'Prova')}</h1>
-      <p class="meta">${[res.prova.disciplina, res.prova.turma || res.prova.serie, res.prova.periodo].filter(Boolean).map(esc).join(' · ')} · ${res.questoes.length} questões · ${num(res.resumo.somaValores)} pontos</p></div></section>
+      <p class="meta">${[res.prova.disciplina, res.prova.turma || res.prova.serie, res.prova.periodo].filter(Boolean).map(esc).join(' · ')} · ${res.questoes.length} questões · ${num(res.resumo.somaValores)} pontos</p>
+      <p class="meta pequeno carimbo">${prova.criada || prova.criadaEm ? `Criada em ${esc(descreverCarimbo(prova.criada || prova.criadaEm))}` : ''}${prova.alterada && (!prova.criada || prova.alterada.em !== prova.criada.em) ? ` · Alterada em ${esc(descreverCarimbo(prova.alterada))}` : ''}${prova.impressao && prova.impressao.aparelho ? ` · Impressa em ${esc(descreverCarimbo(prova.impressao.aparelho))}` : ''}</p></div></section>
     ${res.erros.length ? `<div class="cartao com-erros"><b>O texto desta prova tem erros.</b> <a href="#/prova/${id}/texto">Corrigir</a></div>` : ''}
     ${mudou ? `<div class="cartao lembrete"><b>A prova mudou depois da impressão de ${dataCurta(prova.impressao.em)}.</b> As folhas já impressas não batem com as versões de agora. Imprima de novo.</div>` : ''}
 
@@ -303,7 +304,7 @@ async function telaProva(id) {
       <button class="botao" id="exportar">Enviar para outro aparelho</button>
       <button class="botao" id="duplicar">Duplicar</button>
       <button class="botao perigo" id="excluir">Excluir</button></div>
-      <p class="ajuda">"Enviar para outro aparelho" baixa um arquivo com esta prova, a escola e as imagens. No outro aparelho, abra o Kauê e use Backup › Restaurar.</p></div>`;
+      <p class="ajuda">"Enviar para outro aparelho" baixa um arquivo com esta prova, a escola e as imagens. No outro aparelho, abra o Kauê em Backup e escolha o arquivo.</p></div>`;
 
   // escola
   $('#escola').addEventListener('change', async e => { prova.escolaId = e.target.value || null; await salvarCfg(prova); telaProva(id); });
@@ -313,9 +314,9 @@ async function telaProva(id) {
     const blob = await prepararImagem(f);
     const { largura, altura } = await medirImagem(blob);
     await db.guardar('arquivos', { id: `${prova.id}::${inp.dataset.chave}`, dono: prova.id, chave: inp.dataset.chave, nome: f.name, tipo: blob.type || f.type, blob, largura, altura });
-    aviso('Imagem anexada.'); telaProva(id);
+    await salvarCfg(prova); aviso('Imagem anexada.'); telaProva(id);
   }));
-  $$('[data-tirar]').forEach(b => b.addEventListener('click', async () => { await db.apagar('arquivos', `${prova.id}::${b.dataset.tirar}`); telaProva(id); }));
+  $$('[data-tirar]').forEach(b => b.addEventListener('click', async () => { await db.apagar('arquivos', `${prova.id}::${b.dataset.tirar}`); await salvarCfg(prova); telaProva(id); }));
   // configurações
   $$('[data-cfg]').forEach(inp => inp.addEventListener('change', async () => { prova.config[inp.dataset.cfg] = inp.checked; await salvarCfg(prova); telaProva(id); }));
   const segmento = (sel, chave) => { const el = $(sel); if (el) el.addEventListener('click', async e => {
@@ -327,10 +328,11 @@ async function telaProva(id) {
   // mais
   $('#exportar').addEventListener('click', async () => {
     const dadosBk = await backupDaProva(prova.id);
-    baixar(`kaue-prova-${String(prova.numero).padStart(3, '0')}-${nomeArquivo(prova.titulo)}.json`, new Blob([JSON.stringify(dadosBk)], { type: 'application/json' }));
+    baixar(`kaue-prova-${String(prova.numero).padStart(3, '0')}-${nomeArquivo(prova.titulo)}-${await sufixoArquivo()}.json`, new Blob([JSON.stringify(dadosBk)], { type: 'application/json' }));
   });
   $('#duplicar').addEventListener('click', async () => {
-    const nova = { ...prova, id: uid(), numero: await proximoNumero(), criadaEm: new Date().toISOString(), atualizadaEm: new Date().toISOString(),
+    const cb = await carimbo();
+    const nova = { ...prova, id: uid(), numero: await proximoNumero(), criadaEm: cb.em, criada: cb, atualizadaEm: cb.em, alterada: cb,
       titulo: prova.titulo + ' (cópia)', impressao: null, impressaEm: null };
     nova.texto = prova.texto;
     await db.guardar('provas', nova);
@@ -345,7 +347,8 @@ async function telaProva(id) {
 }
 
 async function salvarCfg(prova) {
-  prova.atualizadaEm = new Date().toISOString();
+  const cb = await carimbo();
+  prova.atualizadaEm = cb.em; prova.alterada = cb;
   await db.guardar('provas', prova);
 }
 
@@ -353,7 +356,7 @@ async function salvarCfg(prova) {
 async function registrarImpressao(prova, montadas) {
   const atual = await db.pegar('provas', prova.id);
   atual.impressaEm = atual.impressaEm || new Date().toISOString();
-  atual.impressao = { em: new Date().toISOString(), assinatura: assinatura({ ...atual, config: prova.config }),
+  atual.impressao = { em: new Date().toISOString(), aparelho: await carimbo(), assinatura: assinatura({ ...atual, config: prova.config }),
     versoes: montadas.map(m => ({ versao: m.versao, letra: m.letra, codigo: m.codigo, total: m.total, adaptada: m.adaptada, gabarito: m.gabarito })) };
   await db.guardar('provas', atual);
 }
@@ -375,7 +378,7 @@ async function telaImprimir(id, qual) {
     html = escolhidas.map(m => provaHTML({ prova: res.prova, montada: m, escola, urls, opcoes, info })).join('');
   }
   const rotulo = qual === 'gabarito' ? 'Gabarito' : qual === 'todas' ? 'Todas as versões' : qual === 'adaptada' ? 'Versão adaptada' : `Versão ${qual}`;
-  document.getElementById('css-paginas').textContent = cssPaginas(montadas, res.prova, { numerar: qual !== 'todas' });
+  document.getElementById('css-paginas').textContent = cssPaginas(montadas, res.prova, { numerar: qual !== 'todas', gerado: await textoGerado() });
   document.body.classList.add('modo-impressao');
   const fonte = (FONTES_PROVA[opcoes.fonte] || FONTES_PROVA.atkinson).css;
   tela().innerHTML = `
@@ -403,7 +406,7 @@ async function exportarWord(id, qual, botao) {
     const montadas = montarTudo(prova, res);
     const base = `${String(prova.numero).padStart(3, '0')}-${nomeArquivo(res.prova.titulo)}`;
     if (qual === 'gabarito') {
-      baixar(`gabarito-${base}.docx`, await gabaritoDocx({ prova: res.prova, montadas }));
+      baixar(`gabarito-${base}.docx`, await gabaritoDocx({ prova: res.prova, montadas, gerado: await textoGerado() }));
     } else {
       const m = montadas.find(x => (qual === 'adaptada' ? x.adaptada : x.letra === qual && !x.adaptada));
       const arquivos = await mapaDeArquivos(prova, escola);
@@ -415,12 +418,18 @@ async function exportarWord(id, qual, botao) {
   finally { if (botao) { botao.disabled = false; botao.textContent = textoAntes; } }
 }
 
+// "Gerado em 25/11/2026 às 08:12 · PC do Gustavo"
+async function textoGerado() {
+  const a = await aparelho();
+  return `Gerado em ${dataHora(new Date().toISOString())}${a.nome ? ' · ' + a.nome : ''}`;
+}
+
 // ---------- escolas ----------
 async function telaEscolas() {
   const escolas = await db.todos('escolas');
   const modos = { campos: 'Campos', imagem: 'Imagem da escola', branco: 'Em branco' };
   tela().innerHTML = `<section class="cabeca"><h1>Escolas</h1><a class="botao principal" href="#/escola/nova">+ Nova escola</a></section>
-    ${escolas.length ? `<div class="lista">${escolas.map(e => `<a class="cartao prova-item" href="#/escola/${e.id}"><div><h3>${esc(e.nome)}</h3><p class="meta">Cabeçalho: ${modos[e.modo] || 'Campos'}</p></div></a>`).join('')}</div>`
+    ${escolas.length ? `<div class="lista">${escolas.map(e => `<a class="cartao prova-item" href="#/escola/${e.id}"><div><h3>${esc(e.nome)}</h3><p class="meta">Cabeçalho: ${modos[e.modo] || 'Campos'}${e.alterada ? ` · alterada em ${esc(descreverCarimbo(e.alterada))}` : ''}</p></div></a>`).join('')}</div>`
       : '<div class="cartao vazio"><h2>Nenhuma escola</h2><p>Cada escola guarda o seu cabeçalho: o nome e a logo, uma imagem pronta ou um espaço em branco.</p></div>'}`;
 }
 
@@ -516,6 +525,9 @@ async function telaEscola(idParam) {
   $('#salvar').addEventListener('click', async () => {
     ler();
     if (!escola.nome) { aviso('Escreva o nome da escola.', 'erro'); $('#nome').focus(); return; }
+    const cb = await carimbo();
+    if (!escola.criada) escola.criada = cb;
+    escola.alterada = cb; escola.atualizadaEm = cb.em;
     await db.guardar('escolas', escola);
     for (const [chave, blob] of pendentes) {
       const idArq = `${escola.id}::${chave}`;
@@ -524,7 +536,7 @@ async function telaEscola(idParam) {
       await db.guardar('arquivos', { id: idArq, dono: escola.id, chave, nome: chave, tipo: blob.type, blob, largura, altura });
     }
     if (escola.professor && !professorCfg) await db.definirConfig('professor', escola.professor);
-    if (voltar) { const p = await db.pegar('provas', voltar); if (p && !p.escolaId) { p.escolaId = escola.id; await db.guardar('provas', p); } }
+    if (voltar) { const p = await db.pegar('provas', voltar); if (p && !p.escolaId) { p.escolaId = escola.id; await salvarCfg(p); } }
     aviso('Escola salva.');
     location.hash = voltar ? `#/prova/${voltar}` : '#/escolas';
   });
@@ -541,47 +553,74 @@ async function telaEscola(idParam) {
 // ---------- backup ----------
 async function telaBackup() {
   const ultimo = await db.config('ultimoBackup');
+  const eu = await aparelho();
   const persistente = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted() : false;
   let uso = '';
   try { const e = await navigator.storage.estimate(); uso = `${(e.usage / 1048576).toFixed(1)} MB usados`; } catch (e) { /* sem suporte */ }
   tela().innerHTML = `
-    <section class="cabeca"><h1>Backup</h1></section>
+    <section class="cabeca"><h1>Backup</h1><a class="botao" href="#/instrucoes" data-ir="t-aparelhos">Guia completo</a></section>
+    ${cartaoNomeAparelho(eu.nome)}
     <div class="cartao"><h2>Baixar o backup</h2>
-      <p>As provas, escolas e imagens ficam guardadas só neste aparelho, neste navegador. O backup é um arquivo com tudo, para guardar no Drive ou levar para outro aparelho.</p>
-      <p class="meta">${ultimo ? 'Último backup: ' + dataCurta(ultimo) : 'Nenhum backup feito ainda.'}${uso ? ' · ' + uso : ''}${persistente ? ' · armazenamento protegido' : ''}</p>
+      <p>As provas, turmas, notas, escolas e imagens ficam guardadas só neste aparelho, neste navegador. O backup é um arquivo com tudo, para guardar no Drive ou levar para outro aparelho.</p>
+      <p class="ajuda">O arquivo termina em <b>.json</b>, um formato de texto que só o Kauê precisa ler. Não abra para editar. O nome dele diz de qual aparelho e de que hora ele é, como <code>kaue-backup-${esc(nomeArquivo(eu.nome || 'sem-nome'))}-2026-11-25-0812.json</code>.</p>
+      <p class="meta">${ultimo ? 'Último backup: ' + dataHora(ultimo) : 'Nenhum backup feito ainda.'}${uso ? ' · ' + uso : ''}${persistente ? ' · armazenamento protegido' : ''}</p>
       <div class="acoes"><button class="botao principal" id="baixar">Baixar o backup completo</button></div></div>
-    <div class="cartao"><h2>Restaurar</h2>
-      <p>Abra um backup ou uma prova enviada de outro aparelho. O que já existe aqui com o mesmo identificador é substituído; o resto continua.</p>
+    <div class="cartao"><h2>Restaurar ou juntar</h2>
+      <p>Abra um backup, ou o arquivo de uma prova ou turma que veio de outro aparelho. Antes de mudar qualquer coisa, o Kauê mostra o que vai acontecer.</p>
+      <ul class="lista-ajuda">
+        <li><b>Nada daqui é apagado.</b> O que está neste aparelho e não está no arquivo continua igual.</li>
+        <li><b>Notas:</b> o Kauê junta aluno por aluno. Se a mesma nota foi lançada nos dois aparelhos, fica a mais recente.</li>
+        <li><b>Provas e escolas:</b> fica a versão alterada por último.</li>
+      </ul>
       <label class="botao">Escolher o arquivo<input type="file" id="arquivo" accept=".json,application/json" hidden></label>
       <div id="resultadoRest"></div></div>
     <div class="cartao"><h2>Sobre</h2><p class="meta">Kauê ${VERSAO_APP} · funciona sem internet depois da primeira abertura. Criado por Gustavo Valentino.</p></div>`;
+  ligarNomeAparelho(() => telaBackup());
+  $$('[data-ir]').forEach(a => a.addEventListener('click', () => sessionStorage.setItem('kaue-ir', a.dataset.ir)));
   $('#baixar').addEventListener('click', async () => {
     const dados = await backupCompleto();
-    const hoje = new Date().toISOString().slice(0, 10);
-    baixar(`kaue-backup-${hoje}.json`, new Blob([JSON.stringify(dados)], { type: 'application/json' }));
+    baixar(`kaue-backup-${await sufixoArquivo()}.json`, new Blob([JSON.stringify(dados)], { type: 'application/json' }));
     await db.definirConfig('ultimoBackup', new Date().toISOString());
     aviso('Backup baixado.');
   });
+  const lista = linhas => `<ul class="resumo-restaurar">${linhas.map(l => `<li class="${l.tipo}">${esc(l.texto)}</li>`).join('')}</ul>`;
   $('#arquivo').addEventListener('change', async e => {
     const f = e.target.files[0]; if (!f) return;
+    const caixa = $('#resultadoRest');
     try {
       const dados = lerBackup(await f.text());
-      const n = (dados.provas || []).length;
-      if (!confirm(`Restaurar ${n} prova${n === 1 ? '' : 's'} e ${(dados.escolas || []).length} escola(s) deste arquivo?`)) return;
-      const r = await restaurar(dados, { incluirConfig: dados.tipo === 'completo' });
-      await db.pedirArmazenamentoPersistente();
-      $('#resultadoRest').innerHTML = `<p class="tudo-certo">Restaurado: ${r.provas} prova(s) e ${r.escolas} escola(s).</p>
-        ${r.conflitos.length ? `<p class="alerta">Atenção: ${r.conflitos.map(c => `a prova nº ${c.numero} (${esc(c.titulo)}) tem o mesmo número de "${esc(c.outro)}"`).join('; ')}. Na correção, confira qual é qual.</p>` : ''}`;
-    } catch (err) { aviso(err.message, 'erro'); }
+      const previa = await restaurar(dados, { simular: true });
+      caixa.innerHTML = `<div class="previa-restaurar"><h3>${esc(f.name)}</h3>${lista(await resumoEmLinhas(previa))}
+        <div class="acoes"><button class="botao principal" id="confirmarRest">Restaurar e juntar</button><button class="botao" id="cancelarRest">Cancelar</button></div></div>`;
+      $('#cancelarRest').addEventListener('click', () => { caixa.innerHTML = ''; e.target.value = ''; });
+      $('#confirmarRest').addEventListener('click', async () => {
+        $('#confirmarRest').disabled = true;
+        const r = await restaurar(dados, { incluirConfig: dados.tipo === 'completo' });
+        await db.pedirArmazenamentoPersistente();
+        caixa.innerHTML = `<div class="previa-restaurar feito"><h3>Pronto</h3>${lista((await resumoEmLinhas(r)).filter(l => l.tipo !== 'origem'))}
+          <p class="ajuda">Confira as turmas e provas. Se este aparelho vai continuar o trabalho, envie de volta depois.</p></div>`;
+        e.target.value = '';
+      });
+    } catch (err) { caixa.innerHTML = ''; aviso(err.message, 'erro'); }
   });
+}
+
+// ---------- instruções (o mesmo tutorial do portal, guardado no app para funcionar sem internet) ----------
+async function telaInstrucoes() {
+  tela().innerHTML = `<section class="cabeca"><h1>Instruções</h1><a class="botao" href="../tutorial.html">Abrir no portal</a></section>
+    <article class="tutorial no-app">${TUTORIAL.replaceAll('{{IMG}}', '../img/tutorial')}</article>`;
+  $$('.tutorial a[href^="#t-"]').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault(); const alvo = document.getElementById(a.getAttribute('href').slice(1)); if (alvo) alvo.scrollIntoView({ behavior: 'smooth' }); }));
+  const ir = sessionStorage.getItem('kaue-ir');
+  if (ir) { sessionStorage.removeItem('kaue-ir'); const alvo = document.getElementById(ir); if (alvo) setTimeout(() => alvo.scrollIntoView(), 50); }
 }
 
 // ---------- início do app ----------
 window.addEventListener('hashchange', navegar);
 window.addEventListener('DOMContentLoaded', () => {
   navegar();
-  if ('serviceWorker' in navigator && location.protocol === 'https:') {
-    navigator.serviceWorker.register('sw.js').then(reg => {
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname))) {
+    navigator.serviceWorker.register(new URL('../sw.js', import.meta.url), { scope: new URL('../', import.meta.url).pathname }).then(reg => {
       reg.addEventListener('updatefound', () => {
         const nova = reg.installing;
         nova && nova.addEventListener('statechange', () => {

@@ -116,3 +116,4 @@ table.gab td.resp { font-weight: 700; }
 /* títulos da prova usam a fonte da prova, não a da marca */
 .folha h1, .folha h2 { font-family: inherit; letter-spacing: normal; word-spacing: normal; }
 .gabarito h1 { font-family: Arial, sans-serif; }
+.disc .aceitas-gab { margin: 1mm 0 0; }

@@ -2,31 +2,118 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Kauê</title>
-<meta name="description" content="Kauê: monte, embaralhe e imprima provas feitas com IA. Funciona sem internet.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kauê – provas com IA, versões e correção pelo código</title>
+<meta name="description" content="Monte provas com IA, imprima versões embaralhadas com gabarito e corrija pelo código. Gratuito, em fase de testes, funciona sem internet.">
 <meta name="theme-color" content="#2B6C4E">
-<link rel="manifest" href="manifest.webmanifest">
+<meta property="og:title" content="Kauê – provas com IA, versões e correção pelo código">
+<meta property="og:description" content="Monte provas com IA, imprima versões embaralhadas com gabarito e corrija pelo código. Gratuito, em fase de testes, funciona sem internet.">
+<meta property="og:image" content="img/compartilhar.png">
 <link rel="icon" type="image/png" href="img/favicon-32.png">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="stylesheet" href="css/kaue.css">
-<link rel="stylesheet" href="css/prova.css">
-<link rel="stylesheet" href="vendor/katex/katex.min.css">
-<style id="css-paginas"></style>
-<script src="vendor/katex/katex.min.js" defer></script>
-<script src="vendor/katex/mhchem.min.js" defer></script>
-<script type="module" src="js/app.js"></script>
+<link rel="stylesheet" href="css/portal.css">
+<script>
+  // quem instalou a primeira versão do Kauê (que abria direto no app) continua indo para o app
+  if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches && !location.pathname.includes('/app/')) location.replace('app/');
+</script>
 </head>
-<body>
-<header class="topo nao-imprimir">
-  <a href="#/" class="marca" aria-label="Kauê, início"><img src="img/logo-mata.png" alt="Kauê" height="34"></a>
-  <nav aria-label="Seções">
-    <a href="#/">Provas</a>
-    <a href="#/escolas">Escolas</a>
-    <a href="#/backup">Backup</a>
-  </nav>
-</header>
-<main id="tela" tabindex="-1"><p class="carregando">Carregando…</p></main>
-<noscript><p style="padding:20px">O Kauê precisa do JavaScript ligado no navegador.</p></noscript>
+<body class="portal">
+<header class="portal-topo"><div class="barra">
+  <a href="index.html" class="marca" aria-label="Kauê, página inicial"><img src="img/logo-mata.png" alt="Kauê" height="38"></a>
+  <nav aria-label="Portal"><a href="index.html" class="ativo">Início</a><a href="tutorial.html" class="">Tutorial</a><a href="marca.html" class="">A marca</a><a href="app/" class="app">Abrir o app</a></nav>
+</div></header>
+<main>
+<section class="hero">
+  <div class="hero-texto">
+    <span class="selo-fase">Gratuito · em fase de testes</span>
+    <h1>Provas prontas, versões contra cola e correção pelo código.</h1>
+    <p>O Kauê ajuda o professor a montar provas com inteligência artificial, imprimir versões embaralhadas com gabarito e corrigir digitando o código da folha. A nota vai direto para a planilha da turma. Funciona no computador e no celular, mesmo sem internet.</p>
+    <div class="hero-acoes">
+      <a class="botao principal grande" href="app/">Abrir o app</a>
+      <a class="botao claro grande" href="downloads/Assistente-de-Provas-Kaue.pdf" download>Baixar o Assistente de Provas</a>
+    </div>
+    <p class="hero-nota">Sem cadastro e sem senha. Suas provas e notas ficam no seu aparelho.</p>
+  </div>
+  <div class="hero-telas" aria-hidden="true">
+    <img class="tela-pc" src="img/tutorial/impressao.webp" alt="">
+    <img class="tela-cel" src="img/tutorial/correcao.webp" alt="">
+  </div>
+</section>
+
+<section class="secao" id="como-funciona">
+  <h2>Como funciona</h2>
+  <p class="secao-lead">Do livro à nota em quatro passos. O <a href="tutorial.html">tutorial completo</a> mostra cada tela.</p>
+  <ol class="passos-portal">
+    <li><span class="n">1</span><h3>Monte com a IA</h3><p>Anexe o Assistente de Provas numa conversa com o Claude, o ChatGPT ou o Gemini. A IA pergunta a turma, o conteúdo e os tipos de questão, lê as fotos do livro e entrega a prova com gabarito.</p></li>
+    <li><span class="n">2</span><h3>Cole no Kauê</h3><p>O app confere a prova, aponta qualquer erro com o número da linha e mostra a prévia com as respostas certas.</p></li>
+    <li><span class="n">3</span><h3>Imprima as versões</h3><p>Versões A, B, C e D com alternativas embaralhadas, mais a versão adaptada. Cada uma com cabeçalho da escola, código e gabarito, em PDF ou Word.</p></li>
+    <li><span class="n">4</span><h3>Corrija pelo código</h3><p>Digite o código da folha, toque nas respostas do aluno e salve. A nota vai para a planilha da turma, por trimestre ou bimestre.</p></li>
+  </ol>
+</section>
+
+<section class="secao clara">
+  <h2>O que o Kauê faz por você</h2>
+  <div class="recursos">
+    <div><h3>Versões contra cola</h3><p>Até quatro versões da mesma prova, com a ordem das alternativas trocada. O gabarito de cada uma sai pronto.</p></div>
+    <div><h3>Versão adaptada</h3><p>Uma coluna, letra maior, menos alternativas e enunciados mais curtos, para quem precisa. A nota é convertida para a escala da prova.</p></div>
+    <div><h3>Correção sem câmera</h3><p>Digite o código e marque as respostas, ou digite as letras das múltiplas de uma vez. O último dígito do código evita lançar nota na versão errada.</p></div>
+    <div><h3>Discursivas com apoio</h3><p>Na correção, o Kauê mostra a resposta esperada, as variações que também valem e os critérios de nota cheia e de meio ponto.</p></div>
+    <div><h3>Planilha da turma</h3><p>Um aluno por linha, uma avaliação por coluna, uma aba por período e o resumo do ano. Notas de trabalhos e outras avaliações entram à mão.</p></div>
+    <div><h3>Excel, PDF e imagem</h3><p>As notas saem em Excel para a secretaria, em PDF para arquivar e em imagem para mandar no grupo, difícil de alterar.</p></div>
+    <div><h3>Cabeçalho da escola</h3><p>Campos com nome e logo, a faixa pronta da escola com o título por cima, ou um espaço em branco para o papel timbrado.</p></div>
+    <div><h3>Computador e celular</h3><p>Funciona offline e sem cadastro. Para usar mais de um aparelho, o Kauê leva um arquivo e junta as notas, com o nome do aparelho e a hora de cada uma.</p></div>
+  </div>
+</section>
+
+<section class="secao assistente" id="assistente">
+  <div class="assistente-capa"><img src="img/assistente-capa.webp" alt="Capa do Assistente de Provas Kauê" loading="lazy"></div>
+  <div>
+    <h2>Assistente de Provas</h2>
+    <p>Um arquivo que transforma a IA numa entrevistadora paciente. Ela faz as perguntas em 8 etapas, lê as fotos do material e só escreve a prova depois que você confirma a ficha. Funciona no Claude, no ChatGPT e no Gemini, e serve também para quem ainda não usa o app: a prova sai pronta para colar no Word.</p>
+    <ol class="mini-passos">
+      <li>Abra uma conversa nova na IA.</li>
+      <li>Anexe o PDF e escreva: <i>Siga as instruções do arquivo e comece.</i></li>
+      <li>Responda às perguntas e revise a prova no fim.</li>
+    </ol>
+    <div class="hero-acoes">
+      <a class="botao principal" href="downloads/Assistente-de-Provas-Kaue.pdf" download>Baixar o PDF</a>
+      <a class="botao" href="downloads/assistente-de-provas-kaue.txt" download>Baixar em texto (.txt)</a>
+    </div>
+    <p class="hero-nota">Uso livre e gratuito, mantendo os créditos.</p>
+  </div>
+</section>
+
+<section class="secao clara" id="futuro">
+  <h2>Para onde o Kauê pode ir</h2>
+  <p class="secao-lead">O Kauê nasceu na sala de aula, para resolver o trabalho de um professor. O que vem depois depende de quem testar. Algumas ideias em estudo:</p>
+  <ul class="futuro">
+    <li><b>Banco de questões</b> para reaproveitar o que já funcionou em outras turmas e anos.</li>
+    <li><b>Relatórios por questão:</b> quais itens a turma mais errou, para retomar o conteúdo.</li>
+    <li><b>Kauê para escolas:</b> cabeçalhos padronizados, professores da mesma escola e compartilhamento com a coordenação.</li>
+    <li><b>Backup na nuvem</b>, para não depender de levar arquivos de um aparelho para outro.</li>
+  </ul>
+</section>
+
+<section class="secao convite">
+  <h2>Teste e conte o que achou</h2>
+  <p>O Kauê está em fase de testes com um grupo pequeno de professores, de várias disciplinas. É gratuito. Se você usar, mande o seu retorno: o que ajudou, o que travou e o que faltou.</p>
+  <div class="hero-acoes">
+    <a class="botao principal grande" href="app/">Abrir o app</a>
+    <a class="botao claro grande" href="https://www.instagram.com/vejaogustavo/">Falar com o criador</a>
+  </div>
+</section>
+
+</main>
+<footer class="portal-rodape"><div class="barra">
+  <img src="img/logo-gustavo.png" alt="Gustavo Valentino | Educação e Comunicação">
+  <div class="contatos"><small>Um projeto de Gustavo Valentino · Kauê 1.2.0, gratuito, em fase de testes</small>
+    <a href="https://vejaogustavo.github.io"><b>Site</b> vejaogustavo.github.io</a> · <a href="https://www.instagram.com/vejaogustavo/"><b>Instagram</b> @vejaogustavo</a> · <a href="https://www.youtube.com/@vejaogustavo"><b>YouTube</b> @vejaogustavo</a>
+    <small>As provas e notas ficam no seu aparelho. O Kauê não coleta dados.</small></div>
+</div></footer>
+<script>
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname)))
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
 </body>
 </html>

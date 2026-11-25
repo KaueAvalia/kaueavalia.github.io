@@ -1,7 +1,7 @@
 // Kauê — banco de dados no próprio aparelho (IndexedDB)
 const NOME = 'kaue';
-const VERSAO = 1;
-export const LOJAS = ['provas', 'escolas', 'arquivos', 'config'];
+const VERSAO = 2;
+export const LOJAS = ['provas', 'escolas', 'arquivos', 'config', 'turmas', 'correcoes'];
 
 let conexao = null;
 
@@ -18,6 +18,12 @@ function abrir() {
         a.createIndex('dono', 'dono');
       }
       if (!db.objectStoreNames.contains('config')) db.createObjectStore('config', { keyPath: 'chave' });
+      // versão 2: turmas e correções
+      if (!db.objectStoreNames.contains('turmas')) db.createObjectStore('turmas', { keyPath: 'id' });
+      if (!db.objectStoreNames.contains('correcoes')) {
+        const c = db.createObjectStore('correcoes', { keyPath: 'id' });
+        c.createIndex('turma', 'turmaId');
+      }
     };
     req.onsuccess = () => { conexao = req.result; ok(conexao); };
     req.onerror = () => falha(req.error);
@@ -39,6 +45,7 @@ export const todos = loja => pedido(loja, 'readonly', s => s.getAll());
 export const guardar = (loja, obj) => pedido(loja, 'readwrite', s => s.put(obj));
 export const apagar = (loja, id) => pedido(loja, 'readwrite', s => s.delete(id));
 export const arquivosDe = dono => pedido('arquivos', 'readonly', s => s.index('dono').getAll(dono));
+export const correcoesDaTurma = turmaId => pedido('correcoes', 'readonly', s => s.index('turma').getAll(turmaId));
 
 export async function apagarArquivosDe(dono) {
   const lista = await arquivosDe(dono);
