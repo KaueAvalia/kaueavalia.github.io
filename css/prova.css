@@ -105,8 +105,8 @@
 .adaptada .bola { width: 7mm; height: 7mm; font-size: 9pt; }
 .adaptada .lacuna { height: 1.2em; }
 
-/* gabarito do professor */
-.gabarito { font-family: Arial, sans-serif; font-size: 9.5pt; page: gab; }
+/* gabarito do professor (só a folha: a classe .gabarito também marca a resposta certa na tela de correção) */
+.folha.gabarito { font-family: Arial, sans-serif; font-size: 9.5pt; page: gab; }
 .gab-cab h1 { font-size: 15pt; margin: 1mm 0; }
 .aviso-prof { display: inline-block; background: #111; color: #fff; font-weight: 700; font-size: 8.5pt; padding: 1mm 2.5mm; border-radius: 1mm; }
 .gab-versao { break-inside: avoid; margin-top: 5mm; }
@@ -126,7 +126,7 @@ table.gab td.resp { font-weight: 700; }
 @media screen {
   .folhas { background: #e8e3d6; padding: 16px 0 40px; position: relative; }
   .pagina { margin: 0 auto 16px; box-shadow: 0 2px 10px rgba(0,0,0,.18); }
-  .gabarito { width: 210mm; min-height: 297mm; margin: 0 auto 16px; padding: 12mm 12mm 14mm; box-shadow: 0 2px 10px rgba(0,0,0,.18); box-sizing: border-box; }
+  .folha.gabarito { width: 210mm; min-height: 297mm; margin: 0 auto 16px; padding: 12mm 12mm 14mm; box-shadow: 0 2px 10px rgba(0,0,0,.18); box-sizing: border-box; }
 }
 @media print {
   .folhas { background: none; padding: 0; }
@@ -135,5 +135,5 @@ table.gab td.resp { font-weight: 700; }
 
 /* títulos da prova usam a fonte da prova, não a da marca */
 .folha h1, .folha h2 { font-family: inherit; letter-spacing: normal; word-spacing: normal; }
-.gabarito h1 { font-family: Arial, sans-serif; }
+.folha.gabarito h1 { font-family: Arial, sans-serif; }
 .disc .aceitas-gab { margin: 1mm 0 0; }

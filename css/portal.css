@@ -158,3 +158,14 @@ body.portal { background: var(--fundo); }
 }
 @media (max-width: 600px) { .resolve, .principios { grid-template-columns: 1fr; } }
 .convite h2 { font-size: clamp(24px, 3vw, 32px); margin-bottom: 10px; }
+
+/* termos de uso */
+.termos { max-width: 800px; padding: 24px 0 48px; }
+.termos h2 { font-size: clamp(21px, 2.4vw, 25px); margin: 34px 0 10px; scroll-margin-top: 90px; }
+.termos p, .termos li { font-size: 16.5px; line-height: 1.6; color: #2C3640; }
+.termos li { margin: 6px 0; }
+.termos .resumo { background: #fff; border: 1px solid var(--linha); border-left: 6px solid var(--mata); border-radius: 14px; padding: 6px 24px 12px; margin-top: 10px; }
+.termos .resumo h2 { margin-top: 18px; }
+/* página de opinião */
+.opiniao-pagina { max-width: 720px; padding: 24px 0 48px; }
+.opiniao-pagina .cartao { padding: 22px; }

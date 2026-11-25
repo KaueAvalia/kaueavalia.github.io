@@ -313,3 +313,31 @@ table.planilha-impressa { width: 100%; border-collapse: collapse; font-family: A
 .resumo-restaurar li.aviso::before { content: '!'; color: var(--urucum); }
 .tutorial h3 { font-size: 19px; margin: 26px 0 8px; }
 .dica-impressao .aviso-encaixe { display: block; margin-top: 8px; padding: 10px 12px; border-left: 4px solid var(--urucum); background: #fff; border-radius: 8px; color: #6b2416; }
+
+/* opinião (site e app) */
+.opiniao fieldset.tipos { border: 0; padding: 0; margin: 0 0 4px; display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.opiniao fieldset.tipos legend { padding: 0; margin-bottom: 8px; }
+.opiniao .tipos label { cursor: pointer; position: relative; }
+.opiniao .tipos input { position: absolute; opacity: 0; pointer-events: none; }
+.opiniao .tipos span { display: inline-block; padding: 8px 16px; border: 1.5px solid #CFC5AE; border-radius: 999px; background: #fff; font-weight: 600; }
+.opiniao .tipos input:checked + span { background: var(--mata); border-color: var(--mata); color: var(--palha); }
+.opiniao .tipos input:focus-visible + span { outline: 3px solid rgba(43, 108, 78, .35); }
+.opiniao textarea { resize: vertical; min-height: 150px; }
+.opiniao .linha-ajuda { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.opiniao .opcional { font-weight: 400; color: var(--cinza); }
+.opiniao .isca { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.opiniao .tecnico { font-family: var(--mono); font-size: 13px; }
+.opiniao .resultado { margin: 12px 0 0; font-weight: 600; }
+.opiniao .resultado:empty { display: none; }
+.opiniao-ok h2 { color: var(--mata); font-size: 24px; }
+
+/* aviso de primeiro uso (termos) */
+.termos-aviso { position: fixed; inset: 0; z-index: 100; background: rgba(22, 32, 42, .6); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.termos-aviso .caixa { background: #fff; border-radius: 18px; max-width: 540px; width: 100%; max-height: calc(100vh - 32px); overflow: auto; padding: 24px 24px 20px; box-shadow: 0 24px 60px rgba(0, 0, 0, .35); }
+.termos-aviso h2 { font-size: 26px; margin-bottom: 6px; }
+.termos-aviso ul { padding-left: 20px; margin: 12px 0; }
+.termos-aviso li { margin: 9px 0; line-height: 1.4; }
+.termos-aviso .acoes { justify-content: space-between; align-items: center; }
+.acoes-cabeca { display: flex; gap: 8px; flex-wrap: wrap; }
+.rodape-inicio { text-align: center; margin: 22px 0 8px; }
+.intro-opiniao { margin: -6px 0 16px; color: #2C3640; max-width: 640px; }

@@ -8,10 +8,13 @@ import * as db from './db.js';
 import { backupCompleto, backupDaProva, lerBackup, restaurar, resumoEmLinhas } from './backup.js';
 import { telaTurmas, telaTurmaForm, telaTurma, telaAlunos, telaAvaliacao, telaCorrigirLista, telaCorrigir, telaImprimirTurma } from './telas-turmas.js';
 import { TUTORIAL } from './tutorial.js';
+import { montarOpiniao, enviarPendentes } from './opiniao.js';
 import { aparelho, carimbo, nomearAparelho, descreverCarimbo, dataHora, sufixoArquivo, SUGESTOES_DE_NOME } from './aparelho.js';
 import { $, $$, esc, uid, num, dataCurta, NOMES_TIPO, baixar, nomeArquivo, medirImagem, prepararImagem, aviso } from './util.js';
 
-const VERSAO_APP = '1.4.0';
+const VERSAO_APP = '1.5.1';
+// mude a data quando os termos mudarem: o aviso de primeiro uso aparece de novo em todos os aparelhos
+const VERSAO_TERMOS = '2026-11-25';
 const tela = () => document.getElementById('tela');
 let urlsAbertas = [];
 const liberarUrls = () => { urlsAbertas.forEach(u => URL.revokeObjectURL(u)); urlsAbertas = []; };
@@ -46,6 +49,7 @@ const rotas = [
   [/^#\/escola\/([^/]+)$/, m => telaEscola(m[1])],
   [/^#\/backup$/, telaBackup],
   [/^#\/instrucoes$/, telaInstrucoes],
+  [/^#\/opiniao$/, telaOpiniao],
   [/^#\/turmas$/, telaTurmas],
   [/^#\/turma\/nova$/, () => telaTurmaForm(null)],
   [/^#\/turma\/([^/?]+)\/editar$/, m => telaTurmaForm(m[1])],
@@ -69,7 +73,7 @@ async function navegar() {
     if (m) {
       try { await fn(m); } catch (e) { console.error(e); tela().innerHTML = `<div class="cartao erro-geral"><h2>Algo deu errado</h2><p>${esc(e.message)}</p><a class="botao" href="#/">Voltar ao início</a></div>`; }
       const secao = h.startsWith('#/escola') ? '#/escolas' : h.startsWith('#/backup') ? '#/backup' : h.startsWith('#/turma') ? '#/turmas'
-        : h.startsWith('#/instrucoes') ? '#/instrucoes' : '#/';
+        : h.startsWith('#/instrucoes') || h.startsWith('#/opiniao') ? '#/instrucoes' : '#/';
       $$('.topo nav a').forEach(a => a.classList.toggle('ativo', a.getAttribute('href') === secao));
       window.scrollTo(0, 0);
       return;
@@ -98,7 +102,8 @@ async function telaInicio() {
     ${lembrete}
     ${provas.length ? `<div class="lista">${lista}</div>` : `<div class="cartao vazio"><img src="../img/apple-touch-icon.png" alt="" width="64" height="64">
       <h2>Nenhuma prova ainda</h2><p>Monte a prova com o Assistente de Provas Kauê no Claude, no ChatGPT ou no Gemini, copie o bloco de código da resposta e cole aqui.</p>
-      <a class="botao principal" href="#/nova">Colar a primeira prova</a></div>`}`;
+      <a class="botao principal" href="#/nova">Colar a primeira prova</a></div>`}
+    <p class="ajuda rodape-inicio">Está testando o Kauê? <a href="#/opiniao">Conte o que achou</a> · <a href="../termos.html">Termos de uso e privacidade</a></p>`;
   ligarNomeAparelho(() => navegar());
 }
 
@@ -614,7 +619,7 @@ async function telaBackup() {
 
 // ---------- instruções (o mesmo tutorial do portal, guardado no app para funcionar sem internet) ----------
 async function telaInstrucoes() {
-  tela().innerHTML = `<section class="cabeca"><h1>Instruções</h1><a class="botao" href="../tutorial.html">Abrir no portal</a></section>
+  tela().innerHTML = `<section class="cabeca"><h1>Instruções</h1><div class="acoes-cabeca"><a class="botao" href="#/opiniao">Dar opinião</a><a class="botao" href="../tutorial.html">Abrir no portal</a></div></section>
     <article class="tutorial no-app">${TUTORIAL.replaceAll('{{IMG}}', '../img/tutorial')}</article>`;
   $$('.tutorial a[href^="#t-"]').forEach(a => a.addEventListener('click', e => {
     e.preventDefault(); const alvo = document.getElementById(a.getAttribute('href').slice(1)); if (alvo) alvo.scrollIntoView({ behavior: 'smooth' }); }));
@@ -622,10 +627,44 @@ async function telaInstrucoes() {
   if (ir) { sessionStorage.removeItem('kaue-ir'); const alvo = document.getElementById(ir); if (alvo) setTimeout(() => alvo.scrollIntoView(), 50); }
 }
 
+// ---------- opinião ----------
+async function telaOpiniao() {
+  tela().innerHTML = `<section class="cabeca"><h1>Sua opinião</h1></section>
+    <p class="intro-opiniao">Conte o que ajudou, o que travou e o que faltou. Comentário, sugestão, crítica ou elogio: tudo ajuda, e você não precisa se identificar.</p>
+    <div class="cartao" id="caixa-opiniao"></div>`;
+  montarOpiniao($('#caixa-opiniao'), { origem: 'app', versao: VERSAO_APP, termos: '../termos.html#opiniao' });
+}
+
+// ---------- aviso de primeiro uso: resumo dos termos, uma vez por aparelho ----------
+function termosAceitos() { try { return localStorage.getItem('kaue-termos') === VERSAO_TERMOS; } catch { return false; } }
+function avisoTermos() {
+  if (termosAceitos() || document.querySelector('.termos-aviso')) return;
+  const fundo = document.createElement('div');
+  fundo.className = 'termos-aviso nao-imprimir';
+  fundo.innerHTML = `<div class="caixa" role="dialog" aria-modal="true" aria-labelledby="termos-titulo">
+    <h2 id="termos-titulo">Antes de começar</h2>
+    <ul>
+      <li><b>O Kauê é gratuito e está em fase de testes.</b> Pode ter erros.</li>
+      <li><b>Suas provas, turmas e notas ficam só neste aparelho.</b> Nada vai para um servidor do Kauê. Faça backup com frequência.</li>
+      <li><b>Revise sempre</b> a prova, o gabarito e as notas antes de usar. O conteúdo das provas é responsabilidade de quem as cria.</li>
+      <li><b>Dados dos alunos:</b> registre só o nome e o número. Não registre laudos, diagnósticos nem o motivo da prova adaptada.</li>
+    </ul>
+    <div class="acoes"><a href="../termos.html" target="_blank" rel="noopener">Ler os termos completos</a><button class="botao principal grande" type="button">Li e concordo</button></div></div>`;
+  document.body.appendChild(fundo);
+  const botao = fundo.querySelector('button');
+  botao.focus();
+  botao.addEventListener('click', () => {
+    try { localStorage.setItem('kaue-termos', VERSAO_TERMOS); localStorage.setItem('kaue-termos-em', new Date().toISOString()); } catch { /* sem armazenamento: o aviso volta na próxima vez */ }
+    fundo.remove();
+  });
+}
+
 // ---------- início do app ----------
 window.addEventListener('hashchange', navegar);
 window.addEventListener('DOMContentLoaded', () => {
   navegar();
+  avisoTermos();
+  enviarPendentes();
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname))) {
     navigator.serviceWorker.register(new URL('../sw.js', import.meta.url), { scope: new URL('../', import.meta.url).pathname }).then(reg => {
       reg.addEventListener('updatefound', () => {
