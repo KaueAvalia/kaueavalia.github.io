@@ -137,3 +137,64 @@ table.gab td.resp { font-weight: 700; }
 .folha h1, .folha h2 { font-family: inherit; letter-spacing: normal; word-spacing: normal; }
 .folha.gabarito h1 { font-family: Arial, sans-serif; }
 .disc .aceitas-gab { margin: 1mm 0 0; }
+
+/* ---------- aula: roteiro do professor ---------- */
+.roteiro { line-height: 1.38; }
+.rot-cab { margin-bottom: 3mm; border-bottom: 1pt solid #111; padding-bottom: 2mm; }
+.rot-cab h1 { font-size: 16pt; margin: 1.5mm 0 0.6mm; }
+.rot-meta { font-size: 9pt; color: #333; margin: 0; }
+.rot-sec, .rot-bloco { margin: 0 0 4mm; }
+.roteiro h2 { font-size: 11.5pt; margin: 0 0 1.5mm; break-after: avoid; }
+.roteiro h3 { font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.3pt; color: #22573F; margin: 2.2mm 0 0.8mm; break-after: avoid; }
+.roteiro ul { margin: 0 0 1mm; padding-left: 5mm; }
+.roteiro li { margin: 0.4mm 0; }
+.rot-bloco { border: 0.8pt solid #b9b2a0; border-radius: 2.5mm; padding: 2.5mm 3.5mm 2mm; }
+.rot-bloco.continua { border-top-style: dashed; }
+.rot-bloco h2 { display: flex; align-items: center; gap: 2mm; }
+.rot-n { display: inline-flex; width: 6mm; height: 6mm; border-radius: 50%; background: #2B6C4E; color: #fff; font-size: 9pt; align-items: center; justify-content: center; flex: none; }
+.rot-tempo { margin-left: auto; font-weight: 400; font-size: 9pt; color: #333; white-space: nowrap; }
+.rot-fala { background: #F1EAD8; border-radius: 2mm; padding: 0.5mm 2.5mm 1.5mm; margin-top: 1.5mm; }
+.rot-fala p { font-style: italic; }
+.rot-linha { display: flex; gap: 2mm; align-items: baseline; }
+.rot-linha h3 { margin: 1.5mm 0 0.5mm; }
+.rot-linha p { margin: 0; }
+.roteiro .resp { display: block; font-size: 0.9em; color: #444; font-style: italic; }
+.rot-tab { width: 100%; border-collapse: collapse; font-size: 9pt; }
+.rot-tab th, .rot-tab td { border: 0.6pt solid #999; padding: 1mm 1.5mm; text-align: left; vertical-align: top; }
+.rot-tab th { background: #eee; }
+.rot-tab td.n { width: 8mm; text-align: center; }
+.rot-tab td.t { white-space: nowrap; }
+.rot-tab tr.total td { font-weight: 700; background: #f6f6f6; }
+.rot-pei { font-size: 8.5pt; color: #444; margin-top: 1.5mm !important; }
+
+/* ---------- aula: apostila (turma e adaptadas) ---------- */
+.apostila { line-height: 1.45; }
+.apostila .bloco h2, .ap-ativ-titulo, .ap-glossario h2 { font-size: 1.15em; text-transform: none; color: #22573F; border-bottom: 1pt solid #2B6C4E; padding-bottom: 0.8mm; margin: 0 0 2mm; break-after: avoid; }
+.apostila .texto-base { text-align: left; hyphens: manual; }
+.ap-secao { margin-bottom: 4mm; }
+.ap-aprender { border-left: 1.2mm solid #C4462D; background: #F1EAD8; padding: 2mm 3mm; margin: 1mm 0 4mm; font-weight: 600; }
+.lembrar { border: 1pt solid #2B6C4E; border-radius: 2mm; padding: 2mm 3mm; margin: 2mm 0 1mm; background: #EDF3EF; break-inside: avoid; }
+.lembrar b { display: block; text-transform: uppercase; font-size: 0.78em; letter-spacing: 0.4pt; color: #22573F; margin-bottom: 0.6mm; }
+.ap-glossario { margin-bottom: 4mm; }
+.ap-glossario dl { margin: 0; }
+.ap-glossario dl div { margin: 0 0 1mm; }
+.ap-glossario dt { display: inline; font-weight: 700; }
+.ap-glossario dt::after { content: ': '; }
+.ap-glossario dd { display: inline; margin: 0; }
+.ap-ativ-titulo { margin-top: 1mm !important; }
+.quadro-pratica { border: 1pt solid #555; border-radius: 2mm; margin-top: 2mm; }
+.picto { display: inline-flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 15mm; min-height: 14mm; border: 1pt dashed #777;
+  border-radius: 1.5mm; padding: 0.5mm 1.2mm; margin: 0 1mm; vertical-align: middle; font-size: 0.8em; line-height: 1.2; text-align: center; }
+.picto small { font-size: 6pt; color: #888; text-transform: uppercase; letter-spacing: 0.3pt; margin-bottom: auto; }
+.img-marca { display: block; border: 1pt dashed #888; border-radius: 2mm; padding: 5mm 3mm; color: #555; font-size: 0.85em; margin: 1.5mm 0; text-align: center; }
+.ap-rotina { border: 1pt solid #333; border-radius: 2mm; padding: 2mm 3mm; margin: 0 0 4mm; }
+.ap-rotina ol { list-style: none; margin: 1mm 0 0; padding: 0; display: flex; flex-direction: column; gap: 1mm; }
+.ap-rotina li { display: flex; align-items: center; gap: 2mm; }
+.caixinha { width: 0.9em; height: 0.9em; border: 1pt solid #333; border-radius: 0.8mm; display: inline-block; flex: none; }
+.apostila.adaptada .questao { margin-bottom: 6mm; }
+.apostila.visao { font-weight: 600; }
+.apostila.visao h2, .apostila.visao b, .apostila.visao .num { font-weight: 700; }
+.apostila.visao .lembrar, .apostila.visao .ap-aprender, .apostila.visao .quadro-pratica { border-width: 1.6pt; }
+
+/* títulos da aula em negrito (a fonte da marca, no app, usa peso normal) */
+.folha.roteiro h1, .folha.roteiro h2, .folha.apostila h2 { font-weight: 700; }

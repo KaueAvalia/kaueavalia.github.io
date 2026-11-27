@@ -7,12 +7,13 @@ import { diagramar, textoDoEncaixe, avisoDoEncaixe } from './diagramar.js';
 import * as db from './db.js';
 import { backupCompleto, backupDaProva, lerBackup, restaurar, resumoEmLinhas } from './backup.js';
 import { telaTurmas, telaTurmaForm, telaTurma, telaAlunos, telaAvaliacao, telaCorrigirLista, telaCorrigir, telaImprimirTurma } from './telas-turmas.js';
+import { telaAulas, telaAulaTexto, telaAula, telaImprimirAula, telaSlides } from './telas-aulas.js';
 import { TUTORIAL } from './tutorial.js';
 import { montarOpiniao, enviarPendentes } from './opiniao.js';
 import { aparelho, carimbo, nomearAparelho, descreverCarimbo, dataHora, sufixoArquivo, SUGESTOES_DE_NOME } from './aparelho.js';
 import { $, $$, esc, uid, num, dataCurta, NOMES_TIPO, baixar, nomeArquivo, medirImagem, prepararImagem, aviso } from './util.js';
 
-const VERSAO_APP = '1.5.1';
+const VERSAO_APP = '1.6.0';
 // mude a data quando os termos mudarem: o aviso de primeiro uso aparece de novo em todos os aparelhos
 const VERSAO_TERMOS = '2026-11-25';
 const tela = () => document.getElementById('tela');
@@ -50,6 +51,12 @@ const rotas = [
   [/^#\/backup$/, telaBackup],
   [/^#\/instrucoes$/, telaInstrucoes],
   [/^#\/opiniao$/, telaOpiniao],
+  [/^#\/aulas$/, telaAulas],
+  [/^#\/aula\/nova$/, () => telaAulaTexto(null)],
+  [/^#\/aula\/([^/?]+)\/texto(\?.*)?$/, m => telaAulaTexto(m[1])],
+  [/^#\/aula\/([^/?]+)\/imprimir\/([^/?]+)$/, m => telaImprimirAula(m[1], m[2])],
+  [/^#\/aula\/([^/?]+)\/slides$/, m => telaSlides(m[1])],
+  [/^#\/aula\/([^/?]+)$/, m => telaAula(m[1])],
   [/^#\/turmas$/, telaTurmas],
   [/^#\/turma\/nova$/, () => telaTurmaForm(null)],
   [/^#\/turma\/([^/?]+)\/editar$/, m => telaTurmaForm(m[1])],
@@ -65,14 +72,14 @@ async function navegar() {
   liberarUrls();
   // troca o elemento da tela para não acumular ouvintes de uma tela na outra
   const velha = tela(); const nova = velha.cloneNode(false); velha.replaceWith(nova);
-  document.body.classList.remove('modo-impressao');
+  document.body.classList.remove('modo-impressao', 'modo-slides');
   document.getElementById('css-paginas').textContent = '';
   const h = location.hash || '#/';
   for (const [re, fn] of rotas) {
     const m = h.match(re);
     if (m) {
       try { await fn(m); } catch (e) { console.error(e); tela().innerHTML = `<div class="cartao erro-geral"><h2>Algo deu errado</h2><p>${esc(e.message)}</p><a class="botao" href="#/">Voltar ao início</a></div>`; }
-      const secao = h.startsWith('#/escola') ? '#/escolas' : h.startsWith('#/backup') ? '#/backup' : h.startsWith('#/turma') ? '#/turmas'
+      const secao = h.startsWith('#/escola') ? '#/escolas' : h.startsWith('#/backup') ? '#/backup' : h.startsWith('#/turma') ? '#/turmas' : h.startsWith('#/aula') ? '#/aulas'
         : h.startsWith('#/instrucoes') || h.startsWith('#/opiniao') ? '#/instrucoes' : '#/';
       $$('.topo nav a').forEach(a => a.classList.toggle('ativo', a.getAttribute('href') === secao));
       window.scrollTo(0, 0);
@@ -573,16 +580,16 @@ async function telaBackup() {
     <section class="cabeca"><h1>Backup</h1><a class="botao" href="#/instrucoes" data-ir="t-aparelhos">Guia completo</a></section>
     ${cartaoNomeAparelho(eu.nome)}
     <div class="cartao"><h2>Baixar o backup</h2>
-      <p>As provas, turmas, notas, escolas e imagens ficam guardadas só neste aparelho, neste navegador. O backup é um arquivo com tudo, para guardar no Drive ou levar para outro aparelho.</p>
+      <p>As provas, aulas, turmas, notas, escolas e imagens ficam guardadas só neste aparelho, neste navegador. O backup é um arquivo com tudo, para guardar no Drive ou levar para outro aparelho.</p>
       <p class="ajuda">O arquivo termina em <b>.json</b>, um formato de texto que só o Kauê precisa ler. Não abra para editar. O nome dele diz de qual aparelho e de que hora ele é, como <code>kaue-backup-${esc(nomeArquivo(eu.nome || 'sem-nome'))}-2026-11-25-0812.json</code>.</p>
       <p class="meta">${ultimo ? 'Último backup: ' + dataHora(ultimo) : 'Nenhum backup feito ainda.'}${uso ? ' · ' + uso : ''}${persistente ? ' · armazenamento protegido' : ''}</p>
       <div class="acoes"><button class="botao principal" id="baixar">Baixar o backup completo</button></div></div>
     <div class="cartao"><h2>Restaurar ou juntar</h2>
-      <p>Abra um backup, ou o arquivo de uma prova ou turma que veio de outro aparelho. Antes de mudar qualquer coisa, o Kauê mostra o que vai acontecer.</p>
+      <p>Abra um backup, ou o arquivo de uma prova, aula ou turma que veio de outro aparelho. Antes de mudar qualquer coisa, o Kauê mostra o que vai acontecer.</p>
       <ul class="lista-ajuda">
         <li><b>Nada daqui é apagado.</b> O que está neste aparelho e não está no arquivo continua igual.</li>
         <li><b>Notas:</b> o Kauê junta aluno por aluno. Se a mesma nota foi lançada nos dois aparelhos, fica a mais recente.</li>
-        <li><b>Provas e escolas:</b> fica a versão alterada por último.</li>
+        <li><b>Provas, aulas e escolas:</b> fica a versão alterada por último.</li>
       </ul>
       <label class="botao">Escolher o arquivo<input type="file" id="arquivo" accept=".json,application/json" hidden></label>
       <div id="resultadoRest"></div></div>
@@ -645,8 +652,8 @@ function avisoTermos() {
     <h2 id="termos-titulo">Antes de começar</h2>
     <ul>
       <li><b>O Kauê é gratuito e está em fase de testes.</b> Pode ter erros.</li>
-      <li><b>Suas provas, turmas e notas ficam só neste aparelho.</b> Nada vai para um servidor do Kauê. Faça backup com frequência.</li>
-      <li><b>Revise sempre</b> a prova, o gabarito e as notas antes de usar. O conteúdo das provas é responsabilidade de quem as cria.</li>
+      <li><b>Suas provas, aulas, turmas e notas ficam só neste aparelho.</b> Nada vai para um servidor do Kauê. Faça backup com frequência.</li>
+      <li><b>Revise sempre</b> a prova, a aula, o gabarito e as notas antes de usar. O conteúdo é responsabilidade de quem o cria.</li>
       <li><b>Dados dos alunos:</b> registre só o nome e o número. Não registre laudos, diagnósticos nem o motivo da prova adaptada.</li>
     </ul>
     <div class="acoes"><a href="../termos.html" target="_blank" rel="noopener">Ler os termos completos</a><button class="botao principal grande" type="button">Li e concordo</button></div></div>`;

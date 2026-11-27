@@ -19,7 +19,7 @@ async function esperarCarregar(el) {
 // mede sem zoom, numa folha "virtual" maior (largura / fator): o zoom da folha final reduz tudo por igual
 function criarMedidor(caixa, v, tam) {
   const m = document.createElement('div');
-  m.className = `folha medidor ${v.adaptada ? 'adaptada' : ''}`;
+  m.className = `folha medidor ${v.adaptada ? 'adaptada' : ''} ${v.classe || ''}`;
   m.style.setProperty('--tam', `${tam}pt`);
   m.innerHTML = `<div class="pag-topo">${v.topo}</div>
     <div class="med-col">${v.pecas.map(p => `<div class="peca">${p.html}</div>`).join('')}</div>`;
@@ -131,24 +131,25 @@ async function encaixar(caixa, versoes, tam, minimo, teto = null) {
 
 function folhasHTML(v, paginas, tam, f) {
   const total = paginas.length;
-  return paginas.map((p, i) => `<section class="folha pagina ${v.adaptada ? 'adaptada' : ''}" style="--tam:${tam}pt;--f:${f}">
+  return paginas.map((p, i) => `<section class="folha pagina ${v.adaptada ? 'adaptada' : ''} ${v.classe || ''}" style="--tam:${tam}pt;--f:${f}">
     <div class="pag-miolo">
     ${i === 0 ? `<div class="pag-topo">${v.topo}</div>` : ''}
     <div class="pag-colunas" style="grid-template-columns:repeat(${v.colunas}, ${larguraColuna(v.colunas) / f}mm)">${p.colunas.map(col => `<div class="pag-col">${col.map(h => `<div class="peca">${h}</div>`).join('')}</div>`).join('')}</div>
     </div>
-    <footer class="pag-rodape"><span>${v.rodape}</span><span>Código ${v.codigo}${total > 1 ? ` · página ${i + 1} de ${total}` : ''}</span></footer>
+    <footer class="pag-rodape"><span>${v.rodape}</span><span>${[v.codigo ? `Código ${v.codigo}` : '', total > 1 ? `página ${i + 1} de ${total}` : ''].filter(Boolean).join(' · ')}</span></footer>
   </section>`).join('');
 }
 
 // monta as folhas de todas as versões dentro de `caixa`; devolve o resumo do encaixe
-export async function diagramar(caixa, versoes, { tamanho = 10 } = {}) {
+// a aula usa outras medidas: { tamanhoAdaptada, minimo, minimoAdaptada, tetoAdaptada }
+export async function diagramar(caixa, versoes, { tamanho = 10, tamanhoAdaptada = 14, minimo = FATOR_MINIMO, minimoAdaptada = FATOR_MINIMO_ADAPTADA, tetoAdaptada = 2 } = {}) {
   const comuns = versoes.filter(v => !v.adaptada), adaptadas = versoes.filter(v => v.adaptada);
   const resumo = [];
   const resultado = new Map();
   // a adaptada (letra 14 pt) mira em duas folhas e pode ser reduzida até 80% (11,2 pt, ainda maior que a das comuns)
-  for (const [grupo, tam, adaptada, minimo, teto] of [[comuns, tamanho, false, FATOR_MINIMO, null], [adaptadas, 14, true, FATOR_MINIMO_ADAPTADA, 2]]) {
+  for (const [grupo, tam, adaptada, min, teto] of [[comuns, tamanho, false, minimo, null], [adaptadas, tamanhoAdaptada, true, minimoAdaptada, tetoAdaptada]]) {
     if (!grupo.length) continue;
-    const r = await encaixar(caixa, grupo, tam, minimo, teto);
+    const r = await encaixar(caixa, grupo, tam, min, teto);
     grupo.forEach((v, i) => resultado.set(v, { paginas: r.paginas[i], tam, f: r.fator }));
     resumo.push({ adaptada, fator: r.fator, tamanho: tam, paginas: r.paginas.map(p => p.length), excede: teto ? Math.max(...r.paginas.map(p => p.length)) > teto : false });
   }

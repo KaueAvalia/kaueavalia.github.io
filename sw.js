@@ -1,5 +1,5 @@
 // Kauê — funciona sem internet: guarda os arquivos do app no aparelho
-const VERSAO = 'kaue-v1.5.1';
+const VERSAO = 'kaue-v1.6.0';
 const ARQUIVOS = [
   './',
   'app/',
@@ -8,7 +8,9 @@ const ARQUIVOS = [
   'css/kaue.css',
   'css/portal.css',
   'css/prova.css',
+  'downloads/Assistente-de-Aulas-Kaue.pdf',
   'downloads/Assistente-de-Provas-Kaue.pdf',
+  'downloads/assistente-de-aulas-kaue.txt',
   'downloads/assistente-de-provas-kaue.txt',
   'fonts/atkinson-hyperlegible-mono-latin-400-normal.woff2',
   'fonts/atkinson-hyperlegible-mono-latin-700-normal.woff2',
@@ -17,6 +19,7 @@ const ARQUIVOS = [
   'fonts/atkinson-hyperlegible-next-latin-700-normal.woff2',
   'fonts/cal-sans-regular.woff2',
   'img/apple-touch-icon.png',
+  'img/assistente-aulas-capa.webp',
   'img/assistente-capa.webp',
   'img/compartilhar.png',
   'img/favicon-32.png',
@@ -50,13 +53,17 @@ const ARQUIVOS = [
   'js/correcao.js',
   'js/db.js',
   'js/diagramar.js',
+  'js/formato-aula.js',
   'js/formato-kaue.js',
   'js/juntar.js',
   'js/notas.js',
   'js/opiniao-config.js',
   'js/opiniao.js',
   'js/provas-dados.js',
+  'js/render-aula.js',
   'js/render-prova.js',
+  'js/slides-pptx.js',
+  'js/telas-aulas.js',
   'js/telas-turmas.js',
   'js/tutorial.js',
   'js/util.js',
@@ -92,7 +99,8 @@ const ARQUIVOS = [
   'vendor/katex/fonts/KaTeX_Typewriter-Regular.woff2',
   'vendor/katex/katex.min.css',
   'vendor/katex/katex.min.js',
-  'vendor/katex/mhchem.min.js'
+  'vendor/katex/mhchem.min.js',
+  'vendor/pptxgenjs/pptxgen.bundle.js'
 ];
 
 self.addEventListener('install', e => {

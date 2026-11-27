@@ -23,10 +23,18 @@ async function cabecalho(tipo) {
 }
 
 export async function backupCompleto() {
-  const [provas, escolas, arquivos, config, turmas, correcoes] = await Promise.all([todos('provas'), todos('escolas'), todos('arquivos'),
-    todos('config'), todos('turmas'), todos('correcoes')]);
-  return { ...await cabecalho('completo'), provas, escolas, config: config.filter(c => !CONFIG_LOCAL.includes(c.chave)), turmas, correcoes,
+  const [provas, escolas, arquivos, config, turmas, correcoes, aulas] = await Promise.all([todos('provas'), todos('escolas'), todos('arquivos'),
+    todos('config'), todos('turmas'), todos('correcoes'), todos('aulas')]);
+  return { ...await cabecalho('completo'), provas, escolas, config: config.filter(c => !CONFIG_LOCAL.includes(c.chave)), turmas, correcoes, aulas,
     arquivos: await arquivosParaJson(arquivos) };
+}
+
+// uma aula, com a escola e as imagens
+export async function backupDaAula(aulaId) {
+  const aula = await pegar('aulas', aulaId);
+  const escola = aula.escolaId ? await pegar('escolas', aula.escolaId) : null;
+  const arquivos = [...await arquivosDe(aulaId), ...(escola ? await arquivosDe(escola.id) : [])];
+  return { ...await cabecalho('aula'), provas: [], aulas: [aula], escolas: escola ? [escola] : [], config: [], arquivos: await arquivosParaJson(arquivos) };
 }
 
 export async function backupDaProva(provaId) {
@@ -59,7 +67,8 @@ export function lerBackup(texto) {
 export async function restaurar(dados, { simular = false } = {}) {
   const gravar = (loja, obj) => (simular ? null : guardar(loja, obj));
   const r = { origem: dados.origem || null, exportadoEm: dados.exportadoEm, tipo: dados.tipo, conflitos: [],
-    provas: { novas: [], atualizadas: [], mantidas: [], iguais: [] }, escolas: { novas: [], atualizadas: [], mantidas: [], iguais: [] }, turmas: [] };
+    provas: { novas: [], atualizadas: [], mantidas: [], iguais: [] }, escolas: { novas: [], atualizadas: [], mantidas: [], iguais: [] },
+    aulas: { novas: [], atualizadas: [], mantidas: [], iguais: [] }, turmas: [] };
   const destino = { nova: 'novas', vindo: 'atualizadas', local: 'mantidas', igual: 'iguais' };
   const donosVindos = new Set();
 
@@ -76,6 +85,11 @@ export async function restaurar(dados, { simular = false } = {}) {
       if (local && local.impressao && (!p.impressao || local.impressao.em > p.impressao.em)) { copia.impressao = local.impressao; copia.impressaEm = local.impressaEm; }
       await gravar('provas', copia); donosVindos.add(p.id);
     }
+  }
+  for (const au of dados.aulas || []) {
+    const d = decidir(await pegar('aulas', au.id), au);
+    r.aulas[destino[d]].push(au);
+    if (d === 'nova' || d === 'vindo') { await gravar('aulas', au); donosVindos.add(au.id); }
   }
   for (const e of dados.escolas || []) {
     const d = decidir(await pegar('escolas', e.id), e);
@@ -152,9 +166,16 @@ export async function resumoEmLinhas(r) {
     if (t.tirados) q.push(`${plural(t.tirados, 'aluno ou avaliação sai', 'alunos ou avaliações saem')} (foram tirados no outro aparelho)`);
     linhas.push({ tipo: 'item', texto: `Turma ${t.nome}: ${q.length ? q.join('; ') : 'nada muda, as notas já são as mesmas'}.` });
   }
+  const au = r.aulas || { novas: [], atualizadas: [], mantidas: [], iguais: [] };
+  const pa = [];
+  if (au.novas.length) pa.push(plural(au.novas.length, 'nova', 'novas'));
+  if (au.atualizadas.length) pa.push(`${plural(au.atualizadas.length, 'atualizada', 'atualizadas')} (a do arquivo é mais recente)`);
+  if (au.mantidas.length) pa.push(`${au.mantidas.length} sem mudança (a daqui é mais recente)`);
+  if (au.iguais.length) pa.push(`${au.iguais.length} já igual aqui`);
+  if (pa.length) linhas.push({ tipo: 'item', texto: `Aulas: ${pa.join(', ')}.` });
   const e = r.escolas;
   if (e.novas.length || e.atualizadas.length) linhas.push({ tipo: 'item', texto: `Escolas: ${[e.novas.length && plural(e.novas.length, 'nova', 'novas'), e.atualizadas.length && plural(e.atualizadas.length, 'atualizada', 'atualizadas')].filter(Boolean).join(', ')}.` });
-  if (r.imagens) linhas.push({ tipo: 'item', texto: `${plural(r.imagens, 'imagem', 'imagens')} de prova ou de cabeçalho.` });
+  if (r.imagens) linhas.push({ tipo: 'item', texto: `${plural(r.imagens, 'imagem', 'imagens')} de prova, de aula ou de cabeçalho.` });
   for (const c of r.conflitos) linhas.push({ tipo: 'aviso', texto: `A prova nº ${String(c.numero).padStart(3, '0')} (${c.titulo}) tem o mesmo número de "${c.outro}", que já está aqui. Na correção, confira qual é qual.` });
   return linhas;
 }

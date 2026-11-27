@@ -1,7 +1,7 @@
 // Kauê — banco de dados no próprio aparelho (IndexedDB)
 const NOME = 'kaue';
-const VERSAO = 2;
-export const LOJAS = ['provas', 'escolas', 'arquivos', 'config', 'turmas', 'correcoes'];
+const VERSAO = 3;
+export const LOJAS = ['provas', 'escolas', 'arquivos', 'config', 'turmas', 'correcoes', 'aulas'];
 
 let conexao = null;
 
@@ -24,6 +24,8 @@ function abrir() {
         const c = db.createObjectStore('correcoes', { keyPath: 'id' });
         c.createIndex('turma', 'turmaId');
       }
+      // versão 3: aulas (roteiro, apostilas e slides)
+      if (!db.objectStoreNames.contains('aulas')) db.createObjectStore('aulas', { keyPath: 'id' });
     };
     req.onsuccess = () => { conexao = req.result; ok(conexao); };
     req.onerror = () => falha(req.error);

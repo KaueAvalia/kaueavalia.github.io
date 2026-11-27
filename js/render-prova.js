@@ -32,7 +32,7 @@ export function textoHTML(t, { lacunas = false } = {}) {
   return `<p>${s}</p>`;
 }
 
-function figura(img, urls, classe = '') {
+export function figura(img, urls, classe = '') {
   const url = urls.get(chaveImagem(img));
   const leg = img.legenda ? `<figcaption>${esc(img.legenda.replace(/\s*\((recortar|recorte)[^)]*\)\s*$/i, ''))}</figcaption>` : '';
   if (url) return `<figure class="fig ${classe}"><img src="${url}" alt="${esc(img.legenda || '')}">${leg}</figure>`;
@@ -58,11 +58,12 @@ function camposHTML(escola, prova, info) {
 
 function tituloHTML(prova, montada) {
   const t = prova.titulo || 'Prova';
-  const v = montada.adaptada ? 'Versão adaptada' : `Versão ${montada.letra}`;
-  return `${esc(t)} <span class="titulo-versao">· ${v}</span>`;
+  // a apostila da aula manda o próprio rótulo (vazio: só o título)
+  const v = montada.rotulo !== undefined ? montada.rotulo : montada.adaptada ? 'Versão adaptada' : `Versão ${montada.letra}`;
+  return v ? `${esc(t)} <span class="titulo-versao">· ${esc(v)}</span>` : esc(t);
 }
 
-function cabecalhoHTML(escola, prova, montada, urls, info) {
+export function cabecalhoHTML(escola, prova, montada, urls, info) {
   const modo = (escola && escola.modo) || 'campos';
   const titulo = tituloHTML(prova, montada);
   if (modo === 'branco') {
@@ -92,7 +93,7 @@ function faixaHTML(prova, montada, info) {
 }
 
 // ---------- questões ----------
-function questaoHTML(q, urls, opcoes) {
+export function questaoHTML(q, urls, opcoes) {
   const valor = opcoes.mostrarValor && q.valor != null ? ` <span class="valor">(${pontosQuestao(q.valor)})</span>` : '';
   const figs = q.imagens.map(i => figura(i, urls)).join('');
   let corpo = '';
